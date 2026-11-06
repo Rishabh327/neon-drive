@@ -1,0 +1,64 @@
+@import 'tailwindcss';
+
+/* Design tokens — the only place colours/fonts are defined */
+@theme {
+  --color-night: #05060f;
+  --color-night-2: #0b0d1c;
+  --color-magenta: #ff2a6d;
+  --color-cyan: #05d9e8;
+  --color-violet: #7b2cff;
+  --color-acid: #f9f871;
+  --color-haze: #c9cde6;
+
+  --font-display: 'Chakra Petch', 'Orbitron', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  background: var(--color-night);
+}
+
+body {
+  margin: 0;
+  background: var(--color-night);
+  color: var(--color-haze);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Lenis recommended base styles */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: clip;
+}
+.lenis [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.beat {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease;
+}
+.beat.is-active {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beat {
+    transition: opacity 0.3s linear;
+    transform: none;
+  }
+}
