@@ -1,11 +1,8 @@
 import { useEffect } from 'react'
 import Lenis from 'lenis'
 import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { advance } from '@react-three/fiber'
 import { useExperience } from '../store'
-
-gsap.registerPlugin(ScrollTrigger)
 
 let lenisInstance: Lenis | null = null
 /** Imperative access for "skip to contact", "replay drive", etc. */
@@ -21,8 +18,9 @@ export function scrollToProgress(p: number, opts: { duration?: number; immediate
 /**
  * One clock for everything: GSAP's ticker drives Lenis, and the same tick
  * publishes the master progress value to the store. The R3F canvas reads it
- * in its own frame loop (same rAF), so camera, overlay and ScrollTriggers
- * never disagree about where we are.
+ * on the same tick (frameloop="never"), so camera and overlay never disagree.
+ * GSAP timelines are scrubbed from the store's progress via timeline.progress(),
+ * so ScrollTrigger isn't needed (one source of truth, ~20 KB less JS).
  */
 export function useSmoothScroll() {
   useEffect(() => {
@@ -34,7 +32,14 @@ export function useSmoothScroll() {
       smoothWheel: !reduced,
     })
     lenisInstance = lenis
-    lenis.on('scroll', ScrollTrigger.update)
+
+    // Every visit starts at the top of the drive; scrolling is locked until IGNITION.
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual'
+    window.scrollTo(0, 0)
+    if (!useExperience.getState().started) lenis.stop()
+    const unsubStart = useExperience.subscribe((s, prev) => {
+      if (s.started && !prev.started) lenis.start()
+    })
 
     let last = lenis.progress || 0
     let velocity = 0
@@ -58,6 +63,7 @@ export function useSmoothScroll() {
 
     return () => {
       gsap.ticker.remove(tick)
+      unsubStart()
       lenis.destroy()
       lenisInstance = null
     }

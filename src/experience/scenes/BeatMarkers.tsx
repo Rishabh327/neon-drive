@@ -1,8 +1,6 @@
-import { useMemo, useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
-import { BufferGeometry, Line, LineBasicMaterial, type Mesh } from 'three'
-import { useExperience } from '../../store'
-import { positionCurve, progressToU } from '../cameraPath'
+import { useMemo } from 'react'
+import { BufferGeometry, Line, LineBasicMaterial } from 'three'
+import { positionCurve } from '../cameraPath'
 
 /**
  * Phase-1 placeholders that mark where each story beat will live.
@@ -53,32 +51,11 @@ export function BeatMarkers({ debug }: { debug: boolean }) {
         <meshBasicMaterial color="#ff2a6d" toneMapped={false} />
       </mesh>
 
-      <CarProxy />
       {debug && <PathLine />}
     </group>
   )
 }
 
-/** A box "car" that drives ahead of the camera during the road beats. */
-function CarProxy() {
-  const ref = useRef<Mesh>(null)
-  useFrame(() => {
-    const m = ref.current
-    if (!m) return
-    const { progress } = useExperience.getState()
-    const onRoad = (progress > 0.17 && progress < 0.6) || (progress > 0.7 && progress < 0.79)
-    m.visible = onRoad
-    if (!onRoad) return
-    const cam = positionCurve.getPoint(progressToU(progress))
-    m.position.set(0, 0.7, Math.max(cam.z - 10, -556))
-  })
-  return (
-    <mesh ref={ref}>
-      <boxGeometry args={[2, 1.2, 4.4]} />
-      <meshStandardMaterial color="#d8dbe8" roughness={0.3} metalness={0.6} />
-    </mesh>
-  )
-}
 
 function PathLine() {
   const line = useMemo(() => {
