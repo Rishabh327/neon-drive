@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { sectionAt, type SectionId } from './data/sections'
+import { FLAGS } from './debugFlags'
 
 export type QualityTier = 'high' | 'medium' | 'low'
 export type LoadStage = 'scene' | 'shaders' | 'frames' | 'fonts'
@@ -17,6 +18,7 @@ function readAudioPref(): boolean {
 
 function initialQuality(): QualityTier {
   // Placeholder heuristic — replaced by real GPU detection in Phase 6
+  if (FLAGS.quality) return FLAGS.quality
   if (typeof window === 'undefined') return 'high'
   return window.matchMedia('(max-width: 767px), (pointer: coarse)').matches ? 'medium' : 'high'
 }

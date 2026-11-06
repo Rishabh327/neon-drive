@@ -55,6 +55,9 @@ void main() {
   vec3 neon = mix(vec3(1.0, 0.165, 0.427), vec3(0.02, 0.85, 0.91), step(0.92, vSeed));
   col += neon * strip * 2.6;
 
+  // never let NaN/Inf reach the HDR buffer — bloom would smear it across the frame
+  if (any(isnan(col)) || any(isinf(col))) col = vec3(0.0);
+  col = max(col, vec3(0.0));
   gl_FragColor = vec4(col, 1.0);
   #include <fog_fragment>
 }

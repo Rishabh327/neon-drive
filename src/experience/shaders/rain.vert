@@ -25,8 +25,17 @@ void main() {
   float vlen = max(length(vel), 0.001);
   vec3 axis = vel / vlen;
   float len = clamp(vlen * 0.03, 0.4, 3.5);
-  vec3 toCam = normalize(cameraPosition - world);
-  vec3 side = normalize(cross(axis, toCam));
+  // NaN-safe basis. When the camera moves fast, drops near the centre of motion
+  // fly straight at the lens (axis ∥ toCam) and drops can pass through the camera
+  // (toCam ≈ 0). A plain normalize() there yields NaN → black pixels that bloom
+  // then smears across the whole frame. Guard both.
+  vec3 toCamRaw = cameraPosition - world;
+  float toCamLen = length(toCamRaw);
+  vec3 toCam = toCamLen > 1e-4 ? toCamRaw / toCamLen : vec3(0.0, 0.0, 1.0);
+  vec3 c = cross(axis, toCam);
+  float cl = length(c);
+  vec3 fallback = abs(toCam.y) < 0.99 ? normalize(cross(vec3(0.0, 1.0, 0.0), toCam)) : vec3(1.0, 0.0, 0.0);
+  vec3 side = cl > 1e-3 ? c / cl : fallback;
   float w = 0.016 * (0.7 + 0.6 * aRand.w);
   world += side * position.x * w + axis * position.y * len;
 
@@ -36,5 +45,6 @@ void main() {
 
   gl_Position = projectionMatrix * viewMatrix * vec4(world, 1.0);
   // thin the rain (rooftop) by collapsing culled drops outside the clip volume
-  if (aRand.w > uDensity) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+  // (also drop anything right at the lens — invisible anyway, and degenerate)
+  if (aRand.w > uDensity || d < 1.2) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
 }

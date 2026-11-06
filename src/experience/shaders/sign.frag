@@ -33,6 +33,9 @@ void main() {
 
   vec3 panel = vColor * 0.06;
   vec3 col = panel + vColor * (border * 2.4 + textMask * 1.7) * on;
+  // never let NaN/Inf reach the HDR buffer — bloom would smear it across the frame
+  if (any(isnan(col)) || any(isinf(col))) col = vec3(0.0);
+  col = max(col, vec3(0.0));
   gl_FragColor = vec4(col, 1.0);
   #include <fog_fragment>
 }

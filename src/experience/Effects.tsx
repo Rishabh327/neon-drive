@@ -2,6 +2,7 @@ import { Bloom, ChromaticAberration, EffectComposer, Noise, ToneMapping, Vignett
 import { BlendFunction, ToneMappingMode } from 'postprocessing'
 import { Vector2 } from 'three'
 import { useExperience } from '../store'
+import { FLAGS } from '../debugFlags'
 
 const CA_OFFSET = new Vector2(0.0007, 0.0005)
 
@@ -21,7 +22,7 @@ export function Effects() {
     )
   }
   return (
-    <EffectComposer multisampling={quality === 'high' ? 4 : 0}>
+    <EffectComposer multisampling={quality === 'high' && FLAGS.msaa ? 4 : 0}>
       <Bloom mipmapBlur luminanceThreshold={1.05} luminanceSmoothing={0.08} intensity={0.85} radius={0.6} />
       <ChromaticAberration offset={CA_OFFSET} radialModulation modulationOffset={0.35} />
       <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />

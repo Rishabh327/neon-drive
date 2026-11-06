@@ -16,6 +16,7 @@ import { Reflector } from 'three/examples/jsm/objects/Reflector.js'
 import { useExperience, type QualityTier } from '../../store'
 import { ROAD_HALF, STREET_Z, mulberry32 } from '../cityLayout'
 import { carState } from '../carState'
+import { FLAGS } from '../../debugFlags'
 import wetRoadVert from '../shaders/wetRoad.vert'
 import wetRoadFrag from '../shaders/wetRoad.frag'
 
@@ -146,5 +147,14 @@ export function WetGround() {
     ;(reflector.material as ShaderMaterial).uniforms.uTime.value = clock.elapsedTime
   })
 
+  if (!FLAGS.reflect) {
+    // diagnostic fallback: same layout, no reflection pass
+    return (
+      <mesh rotation-x={-Math.PI / 2} position={CENTER}>
+        <planeGeometry args={[SIZE_X, SIZE_Z]} />
+        <meshStandardMaterial map={layout} roughness={0.5} metalness={0.4} />
+      </mesh>
+    )
+  }
   return <primitive object={reflector} />
 }

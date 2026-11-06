@@ -7,5 +7,6 @@ void main() {
   float r = length(vUv - 0.5) * 2.0;
   float ring = smoothstep(0.7, 0.88, r) * (1.0 - smoothstep(0.88, 1.0, r));
   float a = ring * (1.0 - vPhase) * 0.5 * uVisible;
+  if (!(a > 0.0)) discard;
   gl_FragColor = vec4(uColor * a, a);
 }

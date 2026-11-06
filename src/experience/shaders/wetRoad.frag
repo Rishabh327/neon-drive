@@ -53,7 +53,7 @@ void main() {
   float near = 1.0 - smoothstep(10.0, 40.0, length(cameraPosition.xz - vWorld.xz));
   vec2 dist = ripples(vWorld.xz * 0.9, uTime) * 0.006 * near * uRipples;
   vec4 proj = vReflUv;
-  vec2 ruv = proj.xy / proj.w + dist;
+  vec2 ruv = proj.xy / max(proj.w, 1e-4) + dist;
 
   // wet-tarmac streaking: several taps stretched vertically in reflection space
   float lod = rough * uMaxLod;
@@ -78,6 +78,9 @@ void main() {
   float tail = smoothstep(0.0, -1.0, along + 2.4) * (1.0 - smoothstep(0.0, 5.0, -along - 2.4)) * (1.0 - smoothstep(0.0, 1.6, across));
   col += vec3(1.0, 0.16, 0.43) * tail * 0.5;
 
+  // never let NaN/Inf reach the HDR buffer — bloom would smear it across the frame
+  if (any(isnan(col)) || any(isinf(col))) col = vec3(0.0);
+  col = max(col, vec3(0.0));
   gl_FragColor = vec4(col, 1.0);
   #include <fog_fragment>
 }

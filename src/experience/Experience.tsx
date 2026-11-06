@@ -9,6 +9,7 @@ import { Car } from './objects/Car'
 import { BeatMarkers } from './scenes/BeatMarkers'
 import { Effects } from './Effects'
 import { NeonEnvironment } from './NeonEnvironment'
+import { FLAGS } from '../debugFlags'
 
 const BG = '#05060f'
 /** Render-pixel budget per tier: DPR is chosen so width×height×dpr² stays under it. */
@@ -44,6 +45,14 @@ export default function Experience({ debug }: { debug: boolean }) {
         state.camera.layers.enable(RAIN_LAYER)
         useExperience.getState().markLoaded('scene')
         if (debug) Object.assign(window, { __neon: { state, advance, store: useExperience } })
+        // three.js already preventDefault()s and restores a lost context; we just make it visible.
+        const canvas = state.gl.domElement
+        canvas.addEventListener('webglcontextlost', () => {
+          const n = ((window as unknown as { __ctxLost?: number }).__ctxLost ?? 0) + 1
+          Object.assign(window, { __ctxLost: n })
+          console.warn(`[neon-drive] WebGL context lost (#${n}) — the GPU reset or ran out of memory`)
+        })
+        canvas.addEventListener('webglcontextrestored', () => console.warn('[neon-drive] WebGL context restored'))
       }}
       aria-hidden="true"
     >
@@ -57,10 +66,10 @@ export default function Experience({ debug }: { debug: boolean }) {
       <CameraRig />
       <City />
       <WetGround />
-      <Rain />
+      {FLAGS.rain && <Rain />}
       <Car />
       <BeatMarkers debug={debug} />
-      <Effects />
+      {FLAGS.fx && <Effects />}
       <Warmup />
       {debug && <FpsProbe />}
     </Canvas>
