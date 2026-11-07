@@ -476,3 +476,66 @@ html.has-reticle textarea {
   border-color: var(--chip, var(--color-cyan));
   background: color-mix(in srgb, var(--chip, #05d9e8) 18%, transparent);
 }
+
+/* ---------- Contact terminal ---------- */
+.term-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgb(5 217 232 / 0.85);
+}
+.term-field span::before {
+  content: '> ';
+  color: var(--color-magenta);
+}
+.term-field input,
+.term-field textarea {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: normal;
+  text-transform: none;
+  color: #fff;
+  background: rgb(5 6 15 / 0.7);
+  border: 1px solid rgb(5 217 232 / 0.3);
+  padding: 8px 10px;
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.term-field input:focus,
+.term-field textarea:focus {
+  outline: none;
+  border-color: var(--color-cyan);
+  box-shadow: 0 0 0 1px var(--color-cyan), 0 0 16px rgb(5 217 232 / 0.25);
+}
+.card-btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+/* ---------- Rewind ---------- */
+.rewind-fx {
+  opacity: 0;
+  transition: opacity 0.3s;
+  background:
+    repeating-linear-gradient(to bottom, rgb(255 255 255 / 0.05) 0 2px, transparent 2px 5px),
+    linear-gradient(90deg, rgb(255 42 109 / 0.08), transparent 30%, transparent 70%, rgb(5 217 232 / 0.08));
+  mix-blend-mode: screen;
+}
+html.rewinding .rewind-fx {
+  opacity: 1;
+  animation: vhs 0.18s steps(2) infinite;
+}
+html.rewinding .rewind-fx p {
+  text-shadow: 3px 0 #ff2a6d, -3px 0 #05d9e8;
+  animation: caret 0.8s steps(1) infinite;
+}
+@keyframes vhs {
+  50% { transform: translateY(2px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html.rewinding .rewind-fx { animation: none; }
+}

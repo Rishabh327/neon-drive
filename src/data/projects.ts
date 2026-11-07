@@ -52,8 +52,9 @@ export const FEATURED: FeaturedProject[] = [
     id: 'buyanybike',
     title: 'BuyAnyBike',
     pitch: 'A vehicle marketplace for finding and buying your next ride.',
-    description: 'A vehicle marketplace web app for browsing and buying bikes.',
-    stack: ['HTML', 'CSS'],
+    description:
+      'A responsive vehicle marketplace interface built with HTML, CSS and JavaScript, with frontend logic structured to scale into features like filtering and listings.',
+    stack: ['HTML', 'CSS', 'JavaScript', 'Responsive UI'],
     repo: 'BuyanyBike',
     accent: 'acid',
   },
@@ -72,7 +73,7 @@ export const FEATURED: FeaturedProject[] = [
     title: 'Government Financial Management System',
     pitch: 'Digitising budgets and expenses with role-based access control.',
     description:
-      'A web system that digitises government financial operations: registration and authentication, budget allocation and expense tracking, with role-based access control for transparency and accuracy.',
+      'A full-stack system built with Flask and MySQL for budget allocation, expense tracking and reporting — with secure authentication, role-based access control, normalised schemas and indexed queries.',
     stack: ['Flask', 'MySQL', 'RBAC', 'Python'],
     repo: 'Government-Financial-Management-Systems',
     accent: 'cyan',

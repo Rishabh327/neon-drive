@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react'
-import { AboutLayer, ContactLayer, DistrictLayer, HeroLayer, IgnitionLayer, ProjectsLayer, RooftopLayer } from './Layers'
+import { AboutLayer, DistrictLayer, HeroLayer, IgnitionLayer, ProjectsLayer, RooftopLayer } from './Layers'
 import { ProjectCards } from './ProjectCards'
 import { SkillsHud } from './SkillsHud'
 import { RegenHud } from './RegenHud'
 import { ProjectPanel, RepoPanel } from './Panels'
+import { ContactTerminal, RewindFx } from './ContactTerminal'
 import { SECTIONS, SCROLL_LENGTH_VH } from '../data/sections'
 import { useExperience } from '../store'
 import { scrollToProgress } from '../hooks/useSmoothScroll'
@@ -38,10 +39,11 @@ export function Overlay() {
         <RegenHud />
         <DistrictLayer />
         <RooftopLayer />
-        <ContactLayer />
+        <ContactTerminal />
       </main>
       <ProjectPanel />
       <RepoPanel />
+      <RewindFx />
     </>
   )
 }

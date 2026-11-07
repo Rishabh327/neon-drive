@@ -3,7 +3,6 @@ import { useExperience } from '../store'
 import { PROFILE, BILLBOARDS } from '../data/profile'
 import { GITHUB, LANG_COLOR, OTHER_REPOS, relativeTime } from '../data/projects'
 import { useBeatFade, useProgressEffect } from './useProgress'
-import { scrollToProgress } from '../hooks/useSmoothScroll'
 import { cameraAt } from '../experience/beat'
 import { activeBillboard } from '../experience/scenes/aboutLayout'
 
@@ -149,47 +148,6 @@ export function RooftopLayer() {
     <div ref={ref} className="pointer-events-none fixed inset-x-0 bottom-0 z-10 px-4 pb-20 sm:px-10" style={{ visibility: 'hidden' }}>
       <p className="font-mono text-xs tracking-[0.3em] text-violet uppercase">// The rooftop</p>
       <p className="font-display mt-2 max-w-2xl text-2xl font-bold text-white sm:text-4xl">The whole city. Every build, one view.</p>
-    </div>
-  )
-}
-
-/** Phase-5 builds the working form; for now: the terminal, real GitHub link, placeholders for the rest. */
-export function ContactLayer() {
-  const ref = useBeatFade<HTMLDivElement>(0.958, 0.975, 2, 3)
-  const { links } = PROFILE
-  const rows: { label: string; href: string | null; note?: string }[] = [
-    { label: 'GitHub', href: links.github },
-    { label: 'Email', href: links.email ? `mailto:${links.email}` : null, note: 'coming soon' },
-    { label: 'LinkedIn', href: links.linkedin, note: 'coming soon' },
-    { label: 'Resume', href: links.resume, note: 'coming soon' },
-  ]
-  return (
-    <div ref={ref} className="fixed inset-x-0 bottom-0 z-20 flex justify-center px-4 pb-16" style={{ visibility: 'hidden' }}>
-      <section id="transmit" aria-labelledby="contact-title" className="hud terminal w-full max-w-xl px-6 py-5">
-        <h2 id="contact-title" className="font-mono text-sm text-cyan">
-          &gt; open channel to rishabh<span className="caret">_</span>
-        </h2>
-        <p className="mt-2 font-mono text-[12px] text-haze/70">Contact form arrives in the next build. Meanwhile:</p>
-        <ul className="mt-4 grid grid-cols-2 gap-2">
-          {rows.map((r) => (
-            <li key={r.label}>
-              {r.href ? (
-                <a className="card-btn w-full justify-center" href={r.href} target="_blank" rel="noreferrer">
-                  [ {r.label} ]
-                </a>
-              ) : (
-                <span className="card-btn is-disabled w-full justify-center" aria-disabled="true" title={r.note}>
-                  [ {r.label} ]
-                </span>
-              )}
-            </li>
-          ))}
-        </ul>
-        <p className="font-display mt-6 text-lg font-bold text-white">End of the road. Start of something new.</p>
-        <button onClick={() => scrollToProgress(0, { duration: 4 })} className="mt-3 font-mono text-xs tracking-[0.25em] text-magenta uppercase hover:text-white">
-          ↺ Replay drive
-        </button>
-      </section>
     </div>
   )
 }

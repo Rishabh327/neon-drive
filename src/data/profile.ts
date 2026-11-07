@@ -14,11 +14,21 @@ export const PROFILE = {
 
   links: {
     github: 'https://github.com/Rishabh327',
-    // ⚠️ PLACEHOLDERS — to be supplied before Phase 5
-    email: null as string | null, // e.g. 'you@example.com'
-    linkedin: null as string | null, // e.g. 'https://www.linkedin.com/in/…'
-    resume: null as string | null, // e.g. '/Rishabh-Jalori-Resume.pdf' (put the file in /public)
+    email: 'rishabh.jalori37@gmail.com' as string | null,
+    linkedin: 'https://www.linkedin.com/in/rishabh-jalori' as string | null,
+    /** file in /public */
+    resume: '/Rishabh_Jalori_Resume.pdf' as string | null,
   },
+
+  /** Formspree form id (formspree.io/f/<id>). The contact form posts here. */
+  formspreeId: 'meokbvld' as string | null,
+
+  /** Canonical site URL — set VITE_SITE_URL at build time (see vite.config.ts). */
+  siteUrl: import.meta.env.VITE_SITE_URL as string,
+
+  /** Short bio used for SEO description + JSON-LD. */
+  summary:
+    'Information Science & Engineering undergraduate at NIE Mysuru building full-stack and AI-powered applications — Flask, MERN, MySQL/MongoDB. Interested in AI/ML and data science.',
 }
 
 /** The billboards along the road (About beat). Short, punchy — they're read at speed. */
@@ -33,8 +43,8 @@ export interface Billboard {
 export const BILLBOARDS: Billboard[] = [
   { kicker: 'EDUCATION', title: 'NIE MYSURU', line: 'The National Institute of Engineering', color: 'cyan' },
   { kicker: 'CLASS OF', title: "ISE '27", line: 'B.E. Information Science & Engineering', color: 'magenta' },
-  { kicker: 'EXPERIENCE', title: 'SAASKART', line: 'Associate Full Stack Developer · Intern', color: 'violet' },
-  { kicker: 'LEADERSHIP', title: 'GEEKSFORGEEKS', line: 'Campus Mantri', color: 'cyan' },
+  { kicker: 'EXPERIENCE', title: 'SAASKART', line: 'Associate Full Stack Developer · Jul–Aug 2025', color: 'violet' },
+  { kicker: 'LEADERSHIP', title: 'GEEKSFORGEEKS', line: 'Campus Mantri (Campus Ambassador) · 2026', color: 'cyan' },
   { kicker: 'COMPETITIVE', title: 'GOLDMAN SACHS', line: 'India Hackathon · C++ competitive programming', color: 'magenta' },
   { kicker: 'NEXT EXIT', title: 'AI · ML · DATA', line: 'Aiming for graduate studies in Germany', color: 'acid' },
 ]
@@ -79,8 +89,9 @@ export const SKILLS: SkillGroup[] = [
     id: 'data',
     label: 'Databases',
     items: [
+      { name: 'MySQL', tier: 3 },
       { name: 'MongoDB', tier: 3 },
-      { name: 'MySQL', tier: 2 },
+      { name: 'SQL', tier: 3 },
     ],
   },
   {
@@ -96,18 +107,22 @@ export const SKILLS: SkillGroup[] = [
   },
   {
     id: 'dsa',
-    label: 'DSA · C++',
+    label: 'DSA · Languages',
     items: [
-      { name: 'C++', tier: 3 },
+      { name: 'C++ (competitive)', tier: 3 },
       { name: 'Data structures & algorithms', tier: 3 },
+      { name: 'Java', tier: 2 },
+      { name: 'C', tier: 2 },
     ],
   },
   {
     id: 'quality',
-    label: 'Testing · Design',
+    label: 'Testing · Tools',
     items: [
+      { name: 'Git & GitHub', tier: 3 },
       { name: 'Software testing & QA', tier: 2 },
       { name: 'UML & design patterns', tier: 2 },
+      { name: 'Linux basics', tier: 1 },
     ],
   },
 ]
