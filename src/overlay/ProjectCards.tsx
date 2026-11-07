@@ -1,5 +1,6 @@
 import { FEATURED, LANG_COLOR, ACCENT_HEX, demoFor, relativeTime, statsFor, type FeaturedProject } from '../data/projects'
 import { CARD_BASE_W, projectCardEls } from './projectCardRegistry'
+import { useExperience } from '../store'
 
 function LangBar({ project }: { project: FeaturedProject }) {
   const s = statsFor(project)
@@ -20,6 +21,8 @@ function LangBar({ project }: { project: FeaturedProject }) {
 }
 
 function Card({ project, index }: { project: FeaturedProject; index: number }) {
+  const setHovered = useExperience((st) => st.setHoveredProject)
+  const openPanel = useExperience((st) => st.setOpenProject)
   const s = statsFor(project)
   const demo = demoFor(project)
   const accent = ACCENT_HEX[project.accent]
@@ -29,6 +32,8 @@ function Card({ project, index }: { project: FeaturedProject; index: number }) {
       ref={(el) => void (projectCardEls[index] = el)}
       aria-labelledby={titleId}
       data-on="0"
+      onPointerEnter={() => setHovered(index)}
+      onPointerLeave={() => setHovered(-1)}
       className="project-card fixed top-0 left-0 flex flex-col p-7"
       style={{ width: CARD_BASE_W, height: (CARD_BASE_W * 10) / 16, visibility: 'hidden', opacity: 0, ['--accent' as string]: accent }}
     >
@@ -73,7 +78,10 @@ function Card({ project, index }: { project: FeaturedProject; index: number }) {
           <p className="font-mono text-[12px] text-haze/70">Source not public yet</p>
         )}
       </div>
-      <div className="mt-4 flex gap-3">
+      <div className="mt-4 flex flex-wrap gap-3">
+        <button className="card-btn is-primary" onClick={() => openPanel(project.id)}>
+          [ Details ]
+        </button>
         {s ? (
           <a className="card-btn" href={s.url} target="_blank" rel="noreferrer">
             [ View code ]
@@ -84,7 +92,7 @@ function Card({ project, index }: { project: FeaturedProject; index: number }) {
           </span>
         )}
         {demo ? (
-          <a className="card-btn is-primary" href={demo} target="_blank" rel="noreferrer">
+          <a className="card-btn" href={demo} target="_blank" rel="noreferrer">
             [ Live demo ]
           </a>
         ) : (

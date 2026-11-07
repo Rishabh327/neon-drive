@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAssetProgress } from '../hooks/useAssetProgress'
+import { audio } from '../audio/engine'
 import { LOAD_STAGES, useExperience } from '../store'
 
 /** Types a line out character by character. */
@@ -75,7 +76,8 @@ export function Loader() {
 
   const go = (withAudio: boolean) => {
     if (leaving) return
-    start(withAudio)
+    start(withAudio) // synchronously enables audio inside this click (browsers require a gesture)
+    if (withAudio) audio.ignition()
     setLeaving(true)
     setTimeout(() => setGone(true), 1100)
   }

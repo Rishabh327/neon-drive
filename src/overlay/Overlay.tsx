@@ -3,6 +3,7 @@ import { AboutLayer, ContactLayer, DistrictLayer, HeroLayer, IgnitionLayer, Proj
 import { ProjectCards } from './ProjectCards'
 import { SkillsHud } from './SkillsHud'
 import { RegenHud } from './RegenHud'
+import { ProjectPanel, RepoPanel } from './Panels'
 import { SECTIONS, SCROLL_LENGTH_VH } from '../data/sections'
 import { useExperience } from '../store'
 import { scrollToProgress } from '../hooks/useSmoothScroll'
@@ -39,7 +40,28 @@ export function Overlay() {
         <RooftopLayer />
         <ContactLayer />
       </main>
+      <ProjectPanel />
+      <RepoPanel />
     </>
+  )
+}
+
+function AudioToggle() {
+  const on = useExperience((s) => s.audioOn)
+  const started = useExperience((s) => s.started)
+  const setAudio = useExperience((s) => s.setAudio)
+  if (!started) return null
+  return (
+    <button
+      onClick={() => setAudio(!on)}
+      aria-pressed={on}
+      aria-label={on ? 'Mute sound' : 'Turn sound on'}
+      className={`audio-toggle ${on ? 'is-on' : ''}`}
+    >
+      {[0, 1, 2, 3].map((i) => (
+        <span key={i} style={{ animationDelay: `${i * -0.23}s` }} />
+      ))}
+    </button>
   )
 }
 
@@ -47,7 +69,7 @@ export function TopBar() {
   const active = useExperience((s) => s.activeSection)
   const district = SECTIONS.find((s) => s.id === active)?.district
   return (
-    <header className="fixed inset-x-0 top-0 z-20 flex items-center justify-between px-4 py-4 sm:px-8">
+    <header className="fixed inset-x-0 top-0 z-30 flex items-center justify-between px-4 py-4 sm:px-8">
       <button
         onClick={() => scrollToProgress(0)}
         className="font-display text-xl font-bold tracking-widest text-white"
@@ -55,15 +77,18 @@ export function TopBar() {
       >
         RJ
       </button>
-      <p className="font-mono text-xs tracking-[0.25em] text-haze uppercase" aria-live="polite">
+      <p className="hidden font-mono text-xs tracking-[0.25em] text-haze uppercase sm:block" aria-live="polite">
         <span className="text-magenta">●</span> {district}
       </p>
-      <button
-        onClick={() => scrollToProgress(1, { duration: 3 })}
-        className="font-mono text-xs tracking-[0.2em] text-cyan uppercase hover:text-white"
-      >
-        Skip to contact →
-      </button>
+      <div className="flex items-center gap-5">
+        <AudioToggle />
+        <button
+          onClick={() => scrollToProgress(1, { duration: 3 })}
+          className="font-mono text-xs tracking-[0.2em] text-cyan uppercase hover:text-white"
+        >
+          Skip to contact →
+        </button>
+      </div>
     </header>
   )
 }

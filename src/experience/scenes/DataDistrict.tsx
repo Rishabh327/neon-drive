@@ -1,9 +1,11 @@
 import { useLayoutEffect, useMemo, useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, type ThreeEvent } from '@react-three/fiber'
 import { Color, type Group, InstancedBufferAttribute, type InstancedMesh, Object3D, ShaderMaterial } from 'three'
 import { GITHUB, LANG_COLOR, OTHER_REPOS, relativeTime } from '../../data/projects'
 import { FONT, spacedText, useCanvasTexture } from '../canvasText'
 import { kioskLayout, WALL } from './districtLayout'
+import { useExperience } from '../../store'
+import { cursorState } from '../../overlay/Cursor'
 
 const TILE_W = 512
 const TILE_H = 320
@@ -83,31 +85,39 @@ function Kiosks() {
     [atlas],
   )
 
-  useLayoutEffect(() => {
+  // per-kiosk visibility factor (1 = standing, 0 = sunk into the pavement by the language filter)
+  const fac = useRef(new Float32Array(n).fill(1))
+  const langFilter = useExperience((s) => s.langFilter)
+
+  const writeMatrices = () => {
     const o = new Object3D()
+    OTHER_REPOS.forEach((_, i) => {
+      const k = kioskLayout(i)
+      const f = fac.current[i]
+      const sink = (1 - f) * 5
+      o.rotation.set(0, k.rotY, 0)
+      o.position.set(k.x, 2.3 - sink, k.z)
+      o.scale.set(3.4, 4.6, 0.9).multiplyScalar(Math.max(f, 0.001))
+      o.updateMatrix()
+      bodies.current!.setMatrixAt(i, o.matrix)
+      o.scale.set(1, 1, 1)
+      o.position.set(k.x, 2.75 - sink, k.z)
+      o.translateZ(0.46)
+      o.scale.set(3.0, 1.875, 1).multiplyScalar(Math.max(f, 0.001))
+      o.updateMatrix()
+      screens.current!.setMatrixAt(i, o.matrix)
+      o.position.set(k.x, 4.65 - sink, k.z)
+      o.scale.set(3.4, 0.12, 0.95).multiplyScalar(Math.max(f, 0.001))
+      o.updateMatrix()
+      strips.current!.setMatrixAt(i, o.matrix)
+    })
+    for (const m of [bodies.current!, screens.current!, strips.current!]) m.instanceMatrix.needsUpdate = true
+  }
+
+  useLayoutEffect(() => {
     const tiles = new Float32Array(n * 4)
     const c = new Color()
     OTHER_REPOS.forEach((r, i) => {
-      const k = kioskLayout(i)
-      // body
-      o.position.set(k.x, 2.3, k.z)
-      o.rotation.set(0, k.rotY, 0)
-      o.scale.set(3.4, 4.6, 0.9)
-      o.updateMatrix()
-      bodies.current!.setMatrixAt(i, o.matrix)
-      // screen on the front face
-      o.scale.set(1, 1, 1)
-      o.position.set(k.x, 2.75, k.z)
-      o.translateZ(0.46)
-      o.scale.set(3.0, 1.875, 1)
-      o.updateMatrix()
-      screens.current!.setMatrixAt(i, o.matrix)
-      // glowing top strip in the language colour
-      o.position.set(k.x, 4.65, k.z)
-      o.rotation.set(0, k.rotY, 0)
-      o.scale.set(3.4, 0.12, 0.95)
-      o.updateMatrix()
-      strips.current!.setMatrixAt(i, o.matrix)
       strips.current!.setColorAt(i, c.set(r.language ? (LANG_COLOR[r.language] ?? '#05d9e8') : '#05d9e8').multiplyScalar(2.2))
       // atlas tile (texture v runs bottom → top)
       const col = i % COLS
@@ -115,25 +125,49 @@ function Kiosks() {
       tiles.set([col / COLS, 1 - (row + 1) / rows, 1 / COLS, 1 / rows], i * 4)
     })
     screens.current!.geometry.setAttribute('aTile', new InstancedBufferAttribute(tiles, 4))
-    for (const m of [bodies.current!, screens.current!, strips.current!]) {
-      m.instanceMatrix.needsUpdate = true
-      m.computeBoundingSphere()
-    }
     if (strips.current!.instanceColor) strips.current!.instanceColor.needsUpdate = true
-  }, [n])
+    writeMatrices()
+    for (const m of [bodies.current!, screens.current!, strips.current!]) m.computeBoundingSphere()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [n, rows])
 
-  useFrame(({ clock }) => {
+  useFrame(({ clock }, delta) => {
     mat.uniforms.uTime.value = clock.elapsedTime
+    let moving = false
+    OTHER_REPOS.forEach((r, i) => {
+      const target = !langFilter || (r.language ?? 'Other') === langFilter ? 1 : 0
+      const f = fac.current[i]
+      if (Math.abs(f - target) > 0.002) {
+        fac.current[i] = f + (target - f) * Math.min(1, delta * 6)
+        moving = true
+      } else fac.current[i] = target
+    })
+    if (moving && bodies.current) writeMatrices()
   })
+
+  const handlers = {
+    onPointerOver: (e: ThreeEvent<PointerEvent>) => {
+      e.stopPropagation()
+      cursorState.over3D = e.instanceId !== undefined && fac.current[e.instanceId] > 0.5
+    },
+    onPointerOut: () => {
+      cursorState.over3D = false
+    },
+    onClick: (e: ThreeEvent<MouseEvent>) => {
+      e.stopPropagation()
+      const i = e.instanceId
+      if (i !== undefined && fac.current[i] > 0.5) useExperience.getState().setOpenRepo(OTHER_REPOS[i].name)
+    },
+  }
 
   if (!n) return null
   return (
     <group>
-      <instancedMesh ref={bodies} args={[undefined, undefined, n]}>
+      <instancedMesh ref={bodies} args={[undefined, undefined, n]} {...handlers}>
         <boxGeometry />
         <meshStandardMaterial color="#10121c" metalness={0.7} roughness={0.35} />
       </instancedMesh>
-      <instancedMesh ref={screens} args={[undefined, mat, n]}>
+      <instancedMesh ref={screens} args={[undefined, mat, n]} {...handlers}>
         <planeGeometry />
       </instancedMesh>
       <instancedMesh ref={strips} args={[undefined, undefined, n]}>

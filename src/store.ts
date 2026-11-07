@@ -41,6 +41,17 @@ interface ExperienceState {
   /** Regen-braking demo toggle */
   regenOn: boolean
   setRegen: (on: boolean) => void
+  /** Featured project index under the pointer (3D tower or HTML card), −1 if none */
+  hoveredProject: number
+  setHoveredProject: (i: number) => void
+  /** Open detail panels (ids / repo names) */
+  openProject: string | null
+  openRepo: string | null
+  setOpenProject: (id: string | null) => void
+  setOpenRepo: (name: string | null) => void
+  /** Data District language filter (null = all) */
+  langFilter: string | null
+  setLangFilter: (lang: string | null) => void
   setScroll: (progress: number, velocity: number) => void
   setAudio: (on: boolean) => void
   setQuality: (q: QualityTier) => void
@@ -59,6 +70,16 @@ export const useExperience = create<ExperienceState>()((set, get) => ({
   started: false,
   regenOn: true,
   setRegen: (regenOn) => set({ regenOn }),
+  hoveredProject: -1,
+  setHoveredProject: (hoveredProject) => {
+    if (get().hoveredProject !== hoveredProject) set({ hoveredProject })
+  },
+  openProject: null,
+  openRepo: null,
+  setOpenProject: (openProject) => set({ openProject, openRepo: null }),
+  setOpenRepo: (openRepo) => set({ openRepo, openProject: null }),
+  langFilter: null,
+  setLangFilter: (langFilter) => set({ langFilter }),
   setScroll: (progress, velocity) => {
     const id = sectionAt(progress).id
     if (id !== get().activeSection) set({ progress, velocity, activeSection: id })

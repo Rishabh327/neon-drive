@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { useExperience } from '../store'
 import { PROFILE, BILLBOARDS } from '../data/profile'
 import { GITHUB, LANG_COLOR, OTHER_REPOS, relativeTime } from '../data/projects'
 import { useBeatFade, useProgressEffect } from './useProgress'
@@ -68,9 +69,22 @@ export function ProjectsLayer() {
   )
 }
 
+/** Languages present in the district, most common first. */
+const DISTRICT_LANGS = Object.entries(
+  OTHER_REPOS.reduce<Record<string, number>>((acc, r) => {
+    const l = r.language ?? 'Other'
+    acc[l] = (acc[l] ?? 0) + 1
+    return acc
+  }, {}),
+).sort((a, b) => b[1] - a[1])
+
 export function DistrictLayer() {
   const ref = useBeatFade<HTMLDivElement>(0.79, 0.805, 0.875, 0.89)
   const total = GITHUB.contributions?.total
+  const filter = useExperience((s) => s.langFilter)
+  const setFilter = useExperience((s) => s.setLangFilter)
+  const openRepo = useExperience((s) => s.setOpenRepo)
+  const shown = OTHER_REPOS.filter((r) => !filter || (r.language ?? 'Other') === filter)
   return (
     <div
       ref={ref}
@@ -84,10 +98,27 @@ export function DistrictLayer() {
         <p className="mt-1 text-[12px] text-haze/80">
           {OTHER_REPOS.length} more public repos, newest first{total != null ? ` · ${total} contributions in the last year` : ''}.
         </p>
-        <ul className="mt-3 min-h-0 space-y-2 overflow-y-auto pr-1" data-lenis-prevent>
-          {OTHER_REPOS.map((r) => (
+        <div className="mt-3 flex flex-wrap gap-1.5" role="group" aria-label="Filter by language">
+          <button className={`filter-chip ${!filter ? 'is-on' : ''}`} aria-pressed={!filter} onClick={() => setFilter(null)}>
+            All <span className="opacity-60">{OTHER_REPOS.length}</span>
+          </button>
+          {DISTRICT_LANGS.map(([lang, n]) => (
+            <button
+              key={lang}
+              className={`filter-chip ${filter === lang ? 'is-on' : ''}`}
+              aria-pressed={filter === lang}
+              onClick={() => setFilter(filter === lang ? null : lang)}
+              style={{ ['--chip' as string]: LANG_COLOR[lang] ?? '#888' }}
+            >
+              <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: LANG_COLOR[lang] ?? '#888' }} />
+              {lang} <span className="opacity-60">{n}</span>
+            </button>
+          ))}
+        </div>
+        <ul className="mt-3 min-h-0 space-y-1.5 overflow-y-auto pr-1" data-lenis-prevent aria-live="polite">
+          {shown.map((r) => (
             <li key={r.name}>
-              <a href={r.url} target="_blank" rel="noreferrer" className="repo-row block">
+              <button onClick={() => openRepo(r.name)} className="repo-row block w-full text-left">
                 <span className="flex items-center justify-between gap-3">
                   <span className="truncate font-mono text-[13px] text-white">{r.name}</span>
                   <span className="shrink-0 font-mono text-[11px] text-haze/70">{relativeTime(r.pushedAt)}</span>
@@ -102,10 +133,11 @@ export function DistrictLayer() {
                   {r.stars > 0 && <span>★ {r.stars}</span>}
                   {r.description && <span className="truncate text-haze/60">· {r.description}</span>}
                 </span>
-              </a>
+              </button>
             </li>
           ))}
         </ul>
+        <p className="mt-2 font-mono text-[10px] text-haze/50">Tip: click a kiosk on the street, too.</p>
       </section>
     </div>
   )

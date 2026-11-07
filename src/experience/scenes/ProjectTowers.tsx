@@ -16,6 +16,7 @@ import {
 import { ACCENT_HEX, FEATURED } from '../../data/projects'
 import { useExperience } from '../../store'
 import { CARD_BASE_W, projectCardEls } from '../../overlay/projectCardRegistry'
+import { cursorState } from '../../overlay/Cursor'
 import { easeOutCubic } from '../beat'
 import { radarAt, TOWER_LAYOUT, unfoldAt } from './projectsLayout'
 import { RAIN_LAYER } from '../objects/Rain'
@@ -39,6 +40,8 @@ function Project({ index }: { index: number }) {
   const color = useMemo(() => new Color(ACCENT_HEX[P.accent]), [P.accent])
   const group = useRef<Group>(null)
   const panel = useRef<Mesh>(null)
+  const pivot = useRef<Group>(null)
+  const hover = useRef(0)
 
   const towerMat = useMemo(
     () =>
@@ -84,14 +87,21 @@ function Project({ index }: { index: number }) {
   }, [color])
 
   const towerTop = useMemo(() => new Vector3(L.x - L.side * TOWER_W * 0.5, L.height, L.z), [L])
-  const hover = useMemo(() => new Vector3(...L.hover), [L])
+  const hoverPos = useMemo(() => new Vector3(...L.hover), [L])
 
-  useFrame(({ camera, clock, size }) => {
-    const p = useExperience.getState().progress
+  useFrame(({ camera, clock, size, pointer }, delta) => {
+    const st = useExperience.getState()
+    const p = st.progress
     const u = unfoldAt(index, p)
     const t = clock.elapsedTime
+    // hover (3D tower or its HTML card): brighten + lean toward the cursor
+    const hv = (hover.current += ((st.hoveredProject === index ? 1 : 0) - hover.current) * Math.min(1, delta * 8))
     towerMat.uniforms.uTime.value = t
-    towerMat.uniforms.uActive.value = u
+    towerMat.uniforms.uActive.value = Math.min(1.6, u + hv * 0.9)
+    if (pivot.current) {
+      pivot.current.rotation.z = -pointer.x * 0.07 * hv
+      pivot.current.rotation.x = -pointer.y * 0.05 * hv
+    }
     panelMat.uniforms.uTime.value = t
     const e = easeOutCubic(u)
     panelMat.uniforms.uUnfold.value = e
@@ -115,8 +125,14 @@ function Project({ index }: { index: number }) {
 
     // unfold: slide from the tower top to the hover point, scale out from a sliver
     pm.visible = true
-    pm.position.lerpVectors(towerTop, hover, e)
+    pm.position.lerpVectors(towerTop, hoverPos, e)
     pm.lookAt(camera.position)
+    // lean toward the pointer while hovered
+    _c.copy(pm.position).project(camera)
+    const tiltY = Math.max(-1, Math.min(1, pointer.x - _c.x)) * 0.22 * hv
+    const tiltX = Math.max(-1, Math.min(1, pointer.y - _c.y)) * 0.16 * hv
+    pm.rotateY(tiltY)
+    pm.rotateX(-tiltX)
     pm.scale.set(Math.max(0.02, e), 0.25 + 0.75 * e, 1)
     pm.updateMatrixWorld()
 
@@ -136,24 +152,45 @@ function Project({ index }: { index: number }) {
       _a.set(0, 0, 0).applyMatrix4(pm.matrixWorld).project(camera)
       _b.set(-PANEL_W / 2, 0, 0).applyMatrix4(pm.matrixWorld).project(camera)
       _c.set(PANEL_W / 2, 0, 0).applyMatrix4(pm.matrixWorld).project(camera)
-      const x = (_a.x * 0.5 + 0.5) * size.width
-      const y = (-_a.y * 0.5 + 0.5) * size.height
-      const wPx = Math.abs(_c.x - _b.x) * 0.5 * size.width
-      const s = wPx / CARD_BASE_W
+      // keep the card fully on screen (shrink on narrow viewports, clamp to the edges)
+      const margin = 12
+      const s = Math.min((Math.abs(_c.x - _b.x) * 0.5 * size.width) / CARD_BASE_W, (size.width - margin * 2) / CARD_BASE_W)
+      const halfW = (CARD_BASE_W * s) / 2
+      const halfH = (CARD_BASE_W * 0.625 * s) / 2
+      const x = Math.min(size.width - halfW - margin, Math.max(halfW + margin, (_a.x * 0.5 + 0.5) * size.width))
+      const y = Math.min(size.height - halfH - margin, Math.max(halfH + 64, (-_a.y * 0.5 + 0.5) * size.height))
       const behind = _a.z > 1
       el.dataset.on = '1'
       el.style.visibility = behind ? 'hidden' : 'visible'
       el.style.opacity = String(Math.max(0, (e - 0.35) / 0.65))
-      el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) translate(-50%, -50%) scale(${s.toFixed(4)})`
+      el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) translate(-50%, -50%) scale(${s.toFixed(4)}) perspective(1100px) rotateY(${((tiltY * 180) / Math.PI).toFixed(2)}deg) rotateX(${((tiltX * 180) / Math.PI).toFixed(2)}deg)`
       el.style.pointerEvents = e > 0.7 ? 'auto' : 'none'
     }
   })
 
   return (
     <group ref={group}>
-      <mesh position={[L.x, L.height / 2, L.z]} material={towerMat}>
-        <boxGeometry args={[TOWER_W, L.height, TOWER_W]} />
-      </mesh>
+      <group ref={pivot} position={[L.x, 0, L.z]}>
+        <mesh
+          position-y={L.height / 2}
+          material={towerMat}
+          onPointerOver={(e) => {
+            e.stopPropagation()
+            useExperience.getState().setHoveredProject(index)
+            cursorState.over3D = true
+          }}
+          onPointerOut={() => {
+            useExperience.getState().setHoveredProject(-1)
+            cursorState.over3D = false
+          }}
+          onClick={(e) => {
+            e.stopPropagation()
+            useExperience.getState().setOpenProject(P.id)
+          }}
+        >
+          <boxGeometry args={[TOWER_W, L.height, TOWER_W]} />
+        </mesh>
+      </group>
       {/* a little emissive plinth so the tower reads as standing on the street */}
       <mesh position={[L.x, 0.15, L.z]}>
         <boxGeometry args={[TOWER_W + 1.2, 0.3, TOWER_W + 1.2]} />

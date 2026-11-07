@@ -3,6 +3,8 @@ import { useSmoothScroll } from './hooks/useSmoothScroll'
 import { DebugHud, Overlay, ProgressBar, TopBar } from './overlay/Overlay'
 import { Loader } from './overlay/Loader'
 import { FLAGS } from './debugFlags'
+import { useAudio } from './audio/useAudio'
+import { Cursor } from './overlay/Cursor'
 
 // The 3D world is its own chunk so the loader paints first.
 const Experience = lazy(() => import('./experience/Experience'))
@@ -11,6 +13,7 @@ const debug = FLAGS.debug
 
 export default function App() {
   useSmoothScroll()
+  useAudio()
   return (
     <>
       <Suspense fallback={null}>
@@ -21,6 +24,7 @@ export default function App() {
       <ProgressBar />
       {debug && <DebugHud />}
       <Loader />
+      <Cursor />
     </>
   )
 }

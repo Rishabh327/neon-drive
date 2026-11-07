@@ -39,6 +39,11 @@ export function useSmoothScroll() {
     if (!useExperience.getState().started) lenis.stop()
     const unsubStart = useExperience.subscribe((s, prev) => {
       if (s.started && !prev.started) lenis.start()
+      // freeze the drive while a detail panel is open
+      const open = !!(s.openProject || s.openRepo)
+      const wasOpen = !!(prev.openProject || prev.openRepo)
+      if (open && !wasOpen) lenis.stop()
+      if (!open && wasOpen && s.started) lenis.start()
     })
 
     let last = lenis.progress || 0
