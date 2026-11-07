@@ -3,7 +3,7 @@
  *   /?fx=off            no post-processing (bloom, CA, grain…)
  *   /?reflect=off       plain road, no reflection pass
  *   /?rain=off          no rain / splashes
- *   /?msaa=off          no multisampled post-processing buffers
+ *   /?msaa=on           use MSAA instead of SMAA (off by default — caused black frames)
  *   /?quality=low       force a quality tier (low | medium | high)
  *   /?debug             FPS + scroll HUD (always on in dev)
  * Combine with &: /?fx=off&rain=off
@@ -15,7 +15,7 @@ export const FLAGS = {
   fx: !off('fx'),
   reflect: !off('reflect'),
   rain: !off('rain'),
-  msaa: !off('msaa'),
+  msaa: ['on', '1', 'true', 'yes'].includes((params.get('msaa') ?? '').toLowerCase()),
   quality: (['low', 'medium', 'high'] as const).find((q) => q === params.get('quality')) ?? null,
   debug: import.meta.env.DEV || params.has('debug'),
 }

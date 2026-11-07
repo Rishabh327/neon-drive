@@ -69,7 +69,7 @@ export default function Experience({ debug }: { debug: boolean }) {
       {FLAGS.rain && <Rain />}
       <Car />
       <BeatMarkers debug={debug} />
-      {FLAGS.fx && <Effects />}
+      <Effects />
       <Warmup />
       {debug && <FpsProbe />}
     </Canvas>

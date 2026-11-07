@@ -10,6 +10,7 @@ import {
   SRGBColorSpace,
   UniformsLib,
   UniformsUtils,
+  type Group,
   type ShaderMaterial,
 } from 'three'
 import { Reflector } from 'three/examples/jsm/objects/Reflector.js'
@@ -17,6 +18,7 @@ import { useExperience, type QualityTier } from '../../store'
 import { ROAD_HALF, STREET_Z, mulberry32 } from '../cityLayout'
 import { carState } from '../carState'
 import { FLAGS } from '../../debugFlags'
+import { PRIORITY } from '../renderOrder'
 import wetRoadVert from '../shaders/wetRoad.vert'
 import wetRoadFrag from '../shaders/wetRoad.frag'
 
@@ -131,21 +133,36 @@ export function WetGround() {
     m.uniforms.uHeadOn = carState.headlights
     r.rotation.x = -Math.PI / 2
     r.position.set(...CENTER)
-    return r
+    r.updateMatrixWorld()
+    // Take the reflection render OUT of the main render. By default Reflector renders
+    // the whole scene from inside onBeforeRender — i.e. nested in the post-processing
+    // pass, switching render targets mid-frame. Some drivers then resolve/discard the
+    // composer's (multisampled) buffer early → black frames while the camera moves.
+    // We run it as its own pass before the main render instead (see useFrame below).
+    const renderReflection = r.onBeforeRender.bind(r)
+    r.onBeforeRender = () => {}
+    return { mesh: r, renderReflection }
   }, [quality, layout, puddles])
 
   useEffect(
     () => () => {
-      reflector.getRenderTarget().dispose()
-      reflector.geometry.dispose()
-      ;(reflector.material as ShaderMaterial).dispose()
+      reflector.mesh.getRenderTarget().dispose()
+      reflector.mesh.geometry.dispose()
+      ;(reflector.mesh.material as ShaderMaterial).dispose()
     },
     [reflector],
   )
 
   useFrame(({ clock }) => {
-    ;(reflector.material as ShaderMaterial).uniforms.uTime.value = clock.elapsedTime
+    ;(reflector.mesh.material as ShaderMaterial).uniforms.uTime.value = clock.elapsedTime
   })
+
+  // Reflection pass: after all updates (camera, car) and before the main render.
+  useFrame(({ gl, scene, camera }) => {
+    if (!FLAGS.reflect) return
+    camera.updateMatrixWorld() // the rig moved it this frame; Reflector reads matrixWorld
+    reflector.renderReflection(gl, scene, camera, reflector.mesh.geometry, reflector.mesh.material as ShaderMaterial, null as unknown as Group)
+  }, PRIORITY.REFLECTION)
 
   if (!FLAGS.reflect) {
     // diagnostic fallback: same layout, no reflection pass
@@ -156,5 +173,5 @@ export function WetGround() {
       </mesh>
     )
   }
-  return <primitive object={reflector} />
+  return <primitive object={reflector.mesh} />
 }
