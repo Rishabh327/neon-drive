@@ -3,7 +3,7 @@ import { useExperience } from '../store'
 import { PROFILE, BILLBOARDS } from '../data/profile'
 import { GITHUB, LANG_COLOR, OTHER_REPOS, relativeTime } from '../data/projects'
 import { useBeatFade, useProgressEffect } from './useProgress'
-import { cameraAt } from '../experience/beat'
+import { cameraZAt } from '../lib/cameraKeyframes'
 import { activeBillboard } from '../experience/scenes/aboutLayout'
 
 export function HeroLayer() {
@@ -37,7 +37,7 @@ export function AboutLayer() {
   const ref = useBeatFade<HTMLDivElement>(0.245, 0.262, 0.355, 0.37)
   const list = useRef<HTMLOListElement>(null)
   useProgressEffect((p) => {
-    const active = activeBillboard(cameraAt(p).z)
+    const active = activeBillboard(cameraZAt(p))
     list.current?.querySelectorAll('li').forEach((li, i) => li.classList.toggle('is-active', i === active))
   })
   return (
@@ -87,7 +87,7 @@ export function DistrictLayer() {
   return (
     <div
       ref={ref}
-      className="fixed top-20 right-4 bottom-16 z-20 flex w-[min(360px,calc(100vw-2rem))] flex-col sm:right-8"
+      className="fixed top-[44svh] right-4 bottom-12 z-20 flex w-[min(360px,calc(100vw-2rem))] flex-col sm:top-20 sm:right-8 sm:bottom-16"
       style={{ visibility: 'hidden' }}
     >
       <section aria-labelledby="district-title" className="hud flex min-h-0 flex-col px-5 py-4">
@@ -130,13 +130,13 @@ export function DistrictLayer() {
                     </>
                   )}
                   {r.stars > 0 && <span>★ {r.stars}</span>}
-                  {r.description && <span className="truncate text-haze/60">· {r.description}</span>}
+                  {r.description && <span className="truncate text-haze/75">· {r.description}</span>}
                 </span>
               </button>
             </li>
           ))}
         </ul>
-        <p className="mt-2 font-mono text-[10px] text-haze/50">Tip: click a kiosk on the street, too.</p>
+        <p className="mt-2 font-mono text-[10px] text-haze/75">Tip: click a kiosk on the street, too.</p>
       </section>
     </div>
   )

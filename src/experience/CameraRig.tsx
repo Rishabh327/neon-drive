@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { MathUtils, Vector3, type PerspectiveCamera } from 'three'
 import { useExperience } from '../store'
@@ -16,7 +16,7 @@ export function CameraRig() {
   const camera = useThree((s) => s.camera) as PerspectiveCamera
   const pointer = useThree((s) => s.pointer)
   const parallax = useRef(new Vector3())
-  const baseFov = useMemo(() => camera.fov, [camera])
+  const size = useThree((s) => s.size)
 
   useFrame((_, delta) => {
     const { progress, velocity } = useExperience.getState()
@@ -36,6 +36,9 @@ export function CameraRig() {
     camera.position.copy(_pos)
     camera.lookAt(_look)
 
+    // portrait screens get a wider vertical FOV so the world isn't a keyhole
+    const aspect = size.width / Math.max(1, size.height)
+    const baseFov = aspect >= 1 ? 55 : 55 + (1 - aspect) * 42
     // widen FOV slightly with scroll speed (sense of acceleration)
     const targetFov = baseFov + MathUtils.clamp(Math.abs(velocity) * 120, 0, 10)
     camera.fov += (targetFov - camera.fov) * (1 - Math.exp(-delta * 4))

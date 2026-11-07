@@ -1,8 +1,7 @@
 import { useEffect, useRef } from 'react'
-import gsap from 'gsap'
 import { SKILLS, TIER_LABEL, type Tier } from '../data/profile'
 import { useProgressEffect } from './useProgress'
-import { range, window4 } from '../experience/beat'
+import { range, window4 } from '../lib/timing'
 
 /** Beat window (scroll progress) for the HUD. */
 const IN_A = 0.618
@@ -20,25 +19,37 @@ function TierBar({ tier }: { tier: Tier }) {
   )
 }
 
+const easeOut = (t: number) => 1 - (1 - t) * (1 - t)
+
+/** One staggered reveal step: element animates over [start, start + dur] of the local timeline (0 → 1). */
+interface Step {
+  el: HTMLElement
+  start: number
+  dur: number
+  apply: (el: HTMLElement, k: number) => void
+}
+
 /**
- * The windshield becomes a HUD. A GSAP timeline (paused) is scrubbed by scroll
- * progress — no ScrollTrigger needed, one source of truth.
+ * The windshield becomes a HUD. Its staggered reveal is a tiny timeline that is
+ * scrubbed by scroll progress — reversible, no animation library.
  */
 export function SkillsHud() {
   const root = useRef<HTMLDivElement>(null)
-  const tl = useRef<gsap.core.Timeline | null>(null)
+  const steps = useRef<Step[]>([])
 
   useEffect(() => {
     const el = root.current!
-    const ctx = gsap.context(() => {
-      tl.current = gsap
-        .timeline({ paused: true, defaults: { ease: 'power2.out' } })
-        .from('.hud-frame', { scaleX: 0.2, opacity: 0, duration: 0.25 })
-        .from('.hud-title', { y: -12, opacity: 0, duration: 0.2 }, '-=0.1')
-        .from('.hud-group', { y: 24, opacity: 0, stagger: 0.07, duration: 0.3 }, '-=0.05')
-        .from('.hud-legend', { opacity: 0, duration: 0.2 }, '-=0.1')
-    }, el)
-    return () => ctx.revert()
+    const q = <T extends HTMLElement>(sel: string) => [...el.querySelectorAll<T>(sel)]
+    const fade = (dy: number) => (e: HTMLElement, k: number) => {
+      e.style.opacity = k.toFixed(3)
+      e.style.transform = `translate3d(0, ${((1 - k) * dy).toFixed(1)}px, 0)`
+    }
+    steps.current = [
+      ...q('.hud-frame').map((e) => ({ el: e, start: 0, dur: 0.25, apply: (x: HTMLElement, k: number) => ((x.style.opacity = k.toFixed(3)), (x.style.transform = `scaleX(${(0.2 + 0.8 * k).toFixed(3)})`)) })),
+      ...q('.hud-title').map((e) => ({ el: e, start: 0.15, dur: 0.2, apply: fade(-12) })),
+      ...q('.hud-group').map((e, i) => ({ el: e, start: 0.3 + i * 0.07, dur: 0.3, apply: fade(24) })),
+      ...q('.hud-legend').map((e) => ({ el: e, start: 0.85, dur: 0.15, apply: fade(0) })),
+    ]
   }, [])
 
   useProgressEffect((p) => {
@@ -47,7 +58,8 @@ export function SkillsHud() {
     const o = window4(p, IN_A, IN_B, OUT_C, OUT_D)
     el.style.visibility = o > 0.01 ? 'visible' : 'hidden'
     el.style.opacity = String(Math.min(1, o * 1.4))
-    tl.current?.progress(range(p, IN_A, 0.66))
+    const t = range(p, IN_A, 0.66)
+    for (const st of steps.current) st.apply(st.el, easeOut(Math.min(1, Math.max(0, (t - st.start) / st.dur))))
   })
 
   return (

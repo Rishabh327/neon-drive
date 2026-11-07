@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import Lenis from 'lenis'
-import gsap from 'gsap'
-import { advance } from '@react-three/fiber'
+import { runRenderFrame } from '../lib/frameDriver'
 import { useExperience } from '../store'
 
 let lenisInstance: Lenis | null = null
@@ -16,11 +15,11 @@ export function scrollToProgress(p: number, opts: { duration?: number; immediate
 }
 
 /**
- * One clock for everything: GSAP's ticker drives Lenis, and the same tick
- * publishes the master progress value to the store. The R3F canvas reads it
- * on the same tick (frameloop="never"), so camera and overlay never disagree.
- * GSAP timelines are scrubbed from the store's progress via timeline.progress(),
- * so ScrollTrigger isn't needed (one source of truth, ~20 KB less JS).
+ * One clock for everything: a single requestAnimationFrame loop drives Lenis,
+ * publishes the master progress value to the store, and renders the R3F frame
+ * on the same tick (frameloop="never") — camera and overlay never disagree.
+ * (GSAP/ScrollTrigger were dropped: every animation is a pure function of
+ * progress, so a library clock added ~32 KB and nothing else.)
  */
 export function useSmoothScroll() {
   useEffect(() => {
@@ -50,6 +49,7 @@ export function useSmoothScroll() {
     let velocity = 0
     const tick = (time: number, deltaMs: number) => {
       lenis.raf(time * 1000)
+      // (time in seconds)
       const p = Math.min(1, Math.max(0, lenis.progress || 0))
       const dt = Math.max(deltaMs, 1) / 1000
       const instant = (p - last) / dt
@@ -61,13 +61,19 @@ export function useSmoothScroll() {
       last = p
       // Render the 3D frame on this same tick (Canvas uses frameloop="never"),
       // so the camera always sees this frame's progress — zero cross-loop jitter.
-      advance(time) // seconds: R3F computes delta as timestamp − elapsedTime
+      runRenderFrame(time) // seconds — registered by the 3D chunk (R3F advance)
     }
-    gsap.ticker.add(tick)
-    gsap.ticker.lagSmoothing(0)
+    let raf = 0
+    let prevNow = performance.now()
+    const loop = (now: number) => {
+      tick(now / 1000, now - prevNow)
+      prevNow = now
+      raf = requestAnimationFrame(loop)
+    }
+    raf = requestAnimationFrame(loop)
 
     return () => {
-      gsap.ticker.remove(tick)
+      cancelAnimationFrame(raf)
       unsubStart()
       lenis.destroy()
       lenisInstance = null

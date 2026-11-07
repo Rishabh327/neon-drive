@@ -101,7 +101,7 @@ export function ProjectPanel() {
                   <div className="col-span-2">
                     <dt className="hud-label">Last push</dt>
                     <dd className="font-mono text-sm text-white">
-                      {relativeTime(s.pushedAt)} <span className="text-haze/60">· {fmtDate(s.pushedAt)}</span>
+                      {relativeTime(s.pushedAt)} <span className="text-haze/75">· {fmtDate(s.pushedAt)}</span>
                     </dd>
                   </div>
                   <div className="col-span-2">
@@ -116,7 +116,7 @@ export function ProjectPanel() {
                         {s.languages.slice(0, 5).map((l) => (
                           <li key={l.name} className="flex items-center gap-2">
                             <span className="inline-block h-2 w-2 rounded-full" style={{ background: LANG_COLOR[l.name] ?? '#888' }} />
-                            {l.name} <span className="text-haze/60">{(l.share * 100).toFixed(1)}%</span>
+                            {l.name} <span className="text-haze/75">{(l.share * 100).toFixed(1)}%</span>
                           </li>
                         ))}
                       </ul>
@@ -139,7 +139,7 @@ export function ProjectPanel() {
             )}
           </div>
           {GITHUB.fetchedAt && (
-            <p className="mt-6 font-mono text-[10px] tracking-[0.2em] text-haze/50 uppercase">
+            <p className="mt-6 font-mono text-[10px] tracking-[0.2em] text-haze/75 uppercase">
               GitHub data · {fmtDate(GITHUB.fetchedAt)}
             </p>
           )}

@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useExperience } from '../store'
 import { SECTIONS } from '../data/sections'
-import { carState } from '../experience/carState'
+import { carSignals } from '../lib/carSignals'
 import { audio } from './engine'
 
 const INTERACTIVE = 'a[href], button:not([disabled]), [role="switch"], [data-sfx]'
@@ -27,7 +27,7 @@ export function useAudio() {
         velocity: s.velocity,
         sectionIndex: SECTIONS.findIndex((x) => x.id === s.activeSection),
         regenOn: s.regenOn,
-        braking: carState.braking,
+        braking: carSignals.braking,
         inCabin: s.progress > 0.625 && s.progress < 0.705,
       })
       if (s.activeSection !== prev.activeSection && s.started) audio.glitch()

@@ -15,6 +15,7 @@ import {
 import { useExperience } from '../../store'
 import { carRoadParam, roadAt, roadParamOf } from '../carPath'
 import { carState } from '../carState'
+import { carSignals } from '../../lib/carSignals'
 import { brakeIntensity } from '../regenModel'
 import { Cockpit } from './Cockpit'
 import { RegenFX } from '../scenes/RegenFX'
@@ -171,6 +172,7 @@ export function Car() {
     // brake lights flare during the regen stop
     const brake = brakeIntensity(progress)
     carState.braking = brake
+    carSignals.braking = brake
     mats.tail.color.copy(mats.tailBase).multiplyScalar(1 + brake * 2.2)
     // share with the road shader (headlight pool + tail glow)
     carState.position.copy(_pos)

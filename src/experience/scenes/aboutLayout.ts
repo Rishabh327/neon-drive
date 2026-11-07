@@ -1,5 +1,5 @@
 import { BILLBOARDS } from '../../data/profile'
-import { hash } from '../beat'
+import { hash } from '../../lib/timing'
 
 /** Billboards along the highway; even = left, odd = right. */
 export const BILLBOARD_LAYOUT = BILLBOARDS.map((_, i) => {

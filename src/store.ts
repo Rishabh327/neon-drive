@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { sectionAt, type SectionId } from './data/sections'
 import { FLAGS } from './debugFlags'
+import { preliminaryTier } from './lib/gpuTier'
 
 export type QualityTier = 'high' | 'medium' | 'low'
 export type LoadStage = 'scene' | 'shaders' | 'frames' | 'fonts'
@@ -17,10 +18,9 @@ function readAudioPref(): boolean {
 }
 
 function initialQuality(): QualityTier {
-  // Placeholder heuristic — replaced by real GPU detection in Phase 6
   if (FLAGS.quality) return FLAGS.quality
-  if (typeof window === 'undefined') return 'high'
-  return window.matchMedia('(max-width: 767px), (pointer: coarse)').matches ? 'medium' : 'high'
+  if (typeof window === 'undefined') return 'medium'
+  return preliminaryTier() // refined from the real GPU name when the canvas is created
 }
 
 interface ExperienceState {
@@ -35,7 +35,11 @@ interface ExperienceState {
   audioPreference: boolean
   audioOn: boolean
   quality: QualityTier
+  /** 0.4 … 1 — fine-grained resolution scale within a tier (adaptive monitor) */
+  pixelScale: number
   loaded: Record<LoadStage, boolean>
+  /** streamed 3D assets (GLTF/KTX2/textures) via three's loading manager */
+  assets: { progress: number; total: number }
   /** True once the visitor pressed IGNITION / enter silently. */
   started: boolean
   /** Regen-braking demo toggle */
@@ -55,6 +59,7 @@ interface ExperienceState {
   setScroll: (progress: number, velocity: number) => void
   setAudio: (on: boolean) => void
   setQuality: (q: QualityTier) => void
+  setPixelScale: (s: number) => void
   markLoaded: (stage: LoadStage) => void
   start: (withAudio: boolean) => void
 }
@@ -66,7 +71,9 @@ export const useExperience = create<ExperienceState>()((set, get) => ({
   audioPreference: readAudioPref(),
   audioOn: false,
   quality: initialQuality(),
+  pixelScale: 1,
   loaded: { scene: false, shaders: false, frames: false, fonts: false },
+  assets: { progress: 0, total: 0 },
   started: false,
   regenOn: true,
   setRegen: (regenOn) => set({ regenOn }),
@@ -94,6 +101,7 @@ export const useExperience = create<ExperienceState>()((set, get) => ({
     set({ audioOn, audioPreference: audioOn })
   },
   setQuality: (quality) => set({ quality }),
+  setPixelScale: (pixelScale) => set({ pixelScale }),
   markLoaded: (stage) => {
     if (!get().loaded[stage]) set({ loaded: { ...get().loaded, [stage]: true } })
   },

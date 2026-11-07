@@ -488,7 +488,7 @@ html.has-reticle textarea {
   text-transform: uppercase;
   color: rgb(5 217 232 / 0.85);
 }
-.term-field span::before {
+.term-field label::before {
   content: '> ';
   color: var(--color-magenta);
 }
@@ -538,4 +538,76 @@ html.rewinding .rewind-fx p {
 }
 @media (prefers-reduced-motion: reduce) {
   html.rewinding .rewind-fx { animation: none; }
+}
+
+/* ---------- Simple mode + skip links ---------- */
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 200;
+  padding: 10px 14px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: #fff;
+  background: var(--color-night);
+  border: 1px solid var(--color-cyan);
+  transform: translateY(-160%);
+  transition: transform 0.2s;
+}
+.skip-link:focus,
+.skip-link:focus-visible {
+  transform: none;
+  outline: none;
+  box-shadow: 0 0 16px rgb(5 217 232 / 0.5);
+}
+.section-kicker {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--color-cyan);
+}
+.section-kicker::before {
+  content: '// ';
+  color: var(--color-magenta);
+}
+.neon-title {
+  text-shadow:
+    0 0 18px rgb(255 42 109 / 0.55),
+    2px 0 0 rgb(255 42 109 / 0.6),
+    -2px 0 0 rgb(5 217 232 / 0.5);
+}
+.project-tile {
+  transition: box-shadow 0.25s, transform 0.25s;
+}
+.project-tile:hover,
+.project-tile:focus-within {
+  box-shadow: 0 0 34px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.8s ease,
+    transform 0.8s ease;
+}
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+.neon-strip {
+  filter: drop-shadow(0 0 4px currentColor);
+}
+html.is-simple {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    transform: none;
+    transition: opacity 0.6s ease;
+  }
+  html.is-simple {
+    scroll-behavior: auto;
+  }
 }

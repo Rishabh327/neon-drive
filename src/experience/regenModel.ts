@@ -1,5 +1,5 @@
 import { REGEN } from '../data/profile'
-import { range, smooth } from './beat'
+import { range, smooth } from '../lib/timing'
 
 /** Braking window (scroll progress) at the intersection. */
 export const BRAKE_A = 0.705

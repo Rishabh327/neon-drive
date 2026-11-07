@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { useExperience } from '../store'
 import { REGEN } from '../data/profile'
 import { useProgressEffect } from './useProgress'
-import { window4 } from '../experience/beat'
+import { window4 } from '../lib/timing'
 import { recoveredWh, socPercent, speedKmh, WH_PER_KM } from '../experience/regenModel'
 
 /** Regen-braking live demo panel (70–78%). Numbers are written straight to the DOM per frame. */

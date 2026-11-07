@@ -51,11 +51,13 @@ export default defineConfig({
     chunkSizeWarningLimit: 1200,
     rollupOptions: {
       output: {
-        // Keep three/R3F in their own long-cached chunk, separate from app code.
-        manualChunks(id: string) {
-          if (id.includes('node_modules/three/')) return 'three'
-          if (id.includes('@react-three')) return 'r3f'
-          if (id.includes('gsap') || id.includes('lenis')) return 'motion'
+        // React in its own small chunk (the loader needs it); three/R3F/post-processing
+        // only load with the lazy 3D chunk, so the loader paints before they arrive.
+        manualChunks(rawId: string) {
+          const id = rawId.split('\\').join('/')
+          if (/node_modules\/(react|react-dom|scheduler|zustand|use-sync-external-store)\//.test(id)) return 'react'
+          if (/node_modules\/(three|@react-three|postprocessing|three-stdlib|its-fine|suspend-react|react-reconciler)\//.test(id)) return 'three'
+          if (id.includes('node_modules/lenis')) return 'motion'
         },
       },
     },

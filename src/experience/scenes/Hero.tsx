@@ -8,6 +8,7 @@ import {
   type Group,
   ShaderMaterial,
   Vector2,
+  Vector3,
 } from 'three'
 import { useExperience, type QualityTier } from '../../store'
 import { PROFILE } from '../../data/profile'
@@ -134,6 +135,8 @@ export function Hero() {
           uTime: { value: 0 },
           uPixelRatio: { value: 1 },
           uSize: { value: 1.6 },
+          uNameCenter: { value: new Vector3(...NAME_POS) },
+          uNameScale: { value: 1 },
         },
       }),
     [],
@@ -142,7 +145,8 @@ export function Hero() {
   const nameMesh = useRef<import('three').Mesh>(null)
   const points = useRef<import('three').Points>(null)
 
-  useFrame(({ clock }) => {
+  useFrame((state) => {
+    const { clock } = state
     const p = useExperience.getState().progress
     const t = clock.elapsedTime
     // name: steady → glitch harder 0.085–0.105 → gone by 0.112 (particles take over at 0.1)
@@ -150,7 +154,16 @@ export function Hero() {
     nameMat.uniforms.uTime.value = t
     nameMat.uniforms.uGlitch.value = glitch
     nameMat.uniforms.uOpacity.value = 1 - smooth(range(p, 0.098, 0.112))
-    if (nameMesh.current) nameMesh.current.visible = p < 0.115
+    if (nameMesh.current) {
+      nameMesh.current.visible = p < 0.115
+      // fit the name to narrow (portrait) screens: ≤ 88% of the visible width at its distance
+      const cam = state.camera as import('three').PerspectiveCamera
+      const dist = cam.position.distanceTo(nameMesh.current.position)
+      const visibleW = 2 * dist * Math.tan(((cam.fov * Math.PI) / 180) / 2) * cam.aspect
+      const fit = Math.min(1, (visibleW * 0.88) / NAME_W)
+      nameMesh.current.scale.setScalar(fit)
+      particleMat.uniforms.uNameScale.value = fit
+    }
 
     particleMat.uniforms.uProgress.value = p
     particleMat.uniforms.uTime.value = t

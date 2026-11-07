@@ -17,9 +17,18 @@ function replay() {
   window.setTimeout(() => root.classList.remove('rewinding'), REWIND_S * 1000 + 200)
 }
 
-/** 96–100%: the rooftop terminal — working contact form + links. */
+/** 96–100%: the rooftop terminal — fades in at the end of the drive. */
 export function ContactTerminal() {
   const ref = useBeatFade<HTMLDivElement>(0.958, 0.975, 2, 3)
+  return (
+    <div ref={ref} className="fixed inset-x-0 bottom-0 z-20 flex justify-center px-3 pb-10 sm:pb-14" style={{ visibility: 'hidden' }}>
+      <ContactPanel className="max-h-[calc(100svh-6rem)]" replayable />
+    </div>
+  )
+}
+
+/** The terminal itself (form + links) — used by the drive and by simple mode. */
+export function ContactPanel({ className = '', replayable = false }: { className?: string; replayable?: boolean }) {
   const { links, formspreeId } = PROFILE
   const [status, setStatus] = useState<Status>('idle')
   const [error, setError] = useState('')
@@ -52,11 +61,10 @@ export function ContactTerminal() {
   }
 
   return (
-    <div ref={ref} className="fixed inset-x-0 bottom-0 z-20 flex justify-center px-3 pb-10 sm:pb-14" style={{ visibility: 'hidden' }}>
       <section
         id="transmit"
         aria-labelledby="contact-title"
-        className="hud terminal max-h-[calc(100svh-6rem)] w-full max-w-2xl overflow-y-auto px-5 py-5 sm:px-7"
+        className={`hud terminal w-full max-w-2xl overflow-y-auto px-5 py-5 sm:px-7 ${className}`}
         data-lenis-prevent
       >
         <h2 id="contact-title" className="font-mono text-sm text-cyan">
@@ -73,18 +81,18 @@ export function ContactTerminal() {
           </div>
         ) : formspreeId ? (
           <form onSubmit={onSubmit} className="mt-4 grid gap-3 sm:grid-cols-2">
-            <label className="term-field">
-              <span>name</span>
-              <input name="name" required autoComplete="name" maxLength={100} />
-            </label>
-            <label className="term-field">
-              <span>email</span>
-              <input name="email" type="email" required autoComplete="email" maxLength={200} />
-            </label>
-            <label className="term-field sm:col-span-2">
-              <span>message</span>
-              <textarea name="message" required rows={3} maxLength={5000} />
-            </label>
+            <div className="term-field">
+              <label htmlFor="cf-name">name</label>
+              <input id="cf-name" name="name" required autoComplete="name" maxLength={100} />
+            </div>
+            <div className="term-field">
+              <label htmlFor="cf-email">email</label>
+              <input id="cf-email" name="email" type="email" required autoComplete="email" maxLength={200} />
+            </div>
+            <div className="term-field sm:col-span-2">
+              <label htmlFor="cf-message">message</label>
+              <textarea id="cf-message" name="message" required rows={3} maxLength={5000} />
+            </div>
             {/* honeypot: bots fill it, people never see it */}
             <input type="text" name="_gotcha" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
             <input type="hidden" name="_subject" value="Neon Drive — new message" />
@@ -141,12 +149,13 @@ export function ContactTerminal() {
 
         <div className="mt-6 flex flex-wrap items-end justify-between gap-3">
           <p className="font-display text-lg font-bold text-white sm:text-xl">End of the road. Start of something new.</p>
-          <button onClick={replay} className="font-mono text-xs tracking-[0.25em] text-magenta uppercase hover:text-white">
-            ↺ Replay drive
-          </button>
+          {replayable && (
+            <button onClick={replay} className="font-mono text-xs tracking-[0.25em] text-magenta uppercase hover:text-white">
+              ↺ Replay drive
+            </button>
+          )}
         </div>
       </section>
-    </div>
   )
 }
 

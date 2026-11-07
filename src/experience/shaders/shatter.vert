@@ -8,6 +8,8 @@ uniform float uProgress;
 uniform float uTime;
 uniform float uPixelRatio;
 uniform float uSize;
+uniform vec3 uNameCenter;
+uniform float uNameScale; // matches the hero name's fit-to-screen scale
 
 varying float vAlpha;
 varying vec3 vColor;
@@ -21,9 +23,10 @@ void main() {
   float t = clamp((uProgress - 0.1 - aRand.w * 0.028) / 0.068, 0.0, 1.0);
   float e = t * t * (3.0 - 2.0 * t);
 
-  vec3 burst = aStart + vec3((aRand.x - 0.5) * 30.0, -4.0 - aRand.y * 12.0, (aRand.z - 0.5) * 18.0 + 8.0);
+  vec3 start = uNameCenter + (aStart - uNameCenter) * uNameScale;
+  vec3 burst = start + vec3((aRand.x - 0.5) * 30.0, -4.0 - aRand.y * 12.0, (aRand.z - 0.5) * 18.0 + 8.0);
   vec3 river = vec3((aRand.x - 0.5) * 9.0, 40.0 + aRand.y * 18.0, 28.0 - aRand.z * 34.0);
-  vec3 pos = bezier(aStart, burst, river, aEnd, e);
+  vec3 pos = bezier(start, burst, river, aEnd, e);
 
   // a little turbulence mid-flight
   float mid = sin(e * 3.14159);

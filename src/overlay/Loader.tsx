@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { useAssetProgress } from '../hooks/useAssetProgress'
 import { audio } from '../audio/engine'
 import { LOAD_STAGES, useExperience } from '../store'
 
@@ -27,7 +26,7 @@ export function Loader() {
   const markLoaded = useExperience((s) => s.markLoaded)
   const start = useExperience((s) => s.start)
   const audioPreference = useExperience((s) => s.audioPreference)
-  const { progress: assetProgress, total: assetTotal } = useAssetProgress()
+  const { progress: assetProgress, total: assetTotal } = useExperience((s) => s.assets)
 
   const [shown, setShown] = useState(0) // displayed %, eased toward the real value
   const [minTimeDone, setMinTimeDone] = useState(false)
@@ -140,7 +139,7 @@ export function Loader() {
             enter silently
           </button>
         </div>
-        <p className={`mt-4 text-[11px] text-haze/50 transition-opacity ${ready ? 'opacity-100' : 'opacity-0'}`}>
+        <p className={`mt-4 text-[11px] text-haze/75 transition-opacity ${ready ? 'opacity-100' : 'opacity-0'}`}>
           {audioPreference ? 'Sound was on last time.' : 'Ignition turns on sound.'} Best with headphones.
         </p>
       </div>

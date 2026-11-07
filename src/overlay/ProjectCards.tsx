@@ -57,7 +57,7 @@ function Card({ project, index }: { project: FeaturedProject; index: number }) {
       {project.moment === 'alertnet' && (
         <p className="mt-3 font-mono text-[11px] text-haze/80" aria-hidden="true">
           <span className="text-acid">●</span> report&nbsp;&nbsp;<span className="text-cyan">◜</span> AI scan&nbsp;&nbsp;
-          <span className="text-[#ff1f40]">●</span> verified&nbsp;&nbsp;<span className="text-haze/60">✕</span> fake, rejected
+          <span className="text-[#ff1f40]">●</span> verified&nbsp;&nbsp;<span className="text-haze/75">✕</span> fake, rejected
         </p>
       )}
       {project.moment === 'regen' && (

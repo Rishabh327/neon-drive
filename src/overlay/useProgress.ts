@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useExperience } from '../store'
-import { window4 } from '../experience/beat'
+import { window4 } from '../lib/timing'
 
 /** Run `cb(progress)` on every scroll update without re-rendering React. */
 export function useProgressEffect(cb: (p: number) => void) {
