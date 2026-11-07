@@ -31,18 +31,21 @@ export const KEYFRAMES: Keyframe[] = [
   { p: 0.47, pos: [-1.5, 6, -310], look: [2, 6, -370] },
   { p: 0.6, pos: [0, 5, -430], look: [0, 3, -490] },
   // Skills HUD — inside the car
-  { p: 0.65, pos: [0, 1.5, -470], look: [0, 1.4, -520] },
-  { p: 0.7, pos: [0, 1.5, -510], look: [0, 1.4, -560] },
+  // eye height 1.1 m: below the 1.27 m roofline of the car
+  { p: 0.65, pos: [0, 1.1, -470], look: [0, 1.0, -520] },
+  { p: 0.7, pos: [0, 1.1, -510], look: [0, 1.0, -560] },
   // Regen — braking hard into the intersection
   { p: 0.78, pos: [0, 3.5, -540], look: [10, 2, -565] },
   // Data District — turn right, cruise along +X
   { p: 0.83, pos: [50, 5, -555], look: [110, 4, -562] },
   { p: 0.88, pos: [170, 6, -555], look: [230, 20, -600] },
-  // Rooftop — rise up the tallest tower's side
-  { p: 0.92, pos: [215, 60, -585], look: [235, 100, -605] },
-  { p: 0.96, pos: [238, 162, -588], look: [120, 90, -400] },
-  // Transmit — settle, looking back over the whole city
-  { p: 1.0, pos: [240, 160, -596], look: [90, 70, -380] },
+  // Rooftop — rise up the tallest tower's west face (tower spans x 225…255, z −625…−595),
+  // staying outside it, then crest the roof edge
+  { p: 0.92, pos: [216, 70, -590], look: [232, 110, -606] },
+  { p: 0.945, pos: [218, 148, -600], look: [236, 152, -612] },
+  { p: 0.96, pos: [232, 158, -609], look: [120, 90, -400] },
+  // Transmit — settle over the roof, terminal in front, the whole city beyond
+  { p: 1.0, pos: [238, 156, -614], look: [100, 70, -390] },
 ]
 
 const toV = (a: [number, number, number]) => new Vector3(...a)

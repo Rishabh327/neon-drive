@@ -1,58 +1,45 @@
 import { useEffect, useRef } from 'react'
+import { AboutLayer, ContactLayer, DistrictLayer, HeroLayer, IgnitionLayer, ProjectsLayer, RooftopLayer } from './Layers'
+import { ProjectCards } from './ProjectCards'
+import { SkillsHud } from './SkillsHud'
+import { RegenHud } from './RegenHud'
 import { SECTIONS, SCROLL_LENGTH_VH } from '../data/sections'
 import { useExperience } from '../store'
 import { scrollToProgress } from '../hooks/useSmoothScroll'
-
-/** Phase-1 placeholder copy per beat — real content arrives in Phase 3/5. */
-const PLACEHOLDER: Record<string, { kicker: string; title: string }> = {
-  hero: { kicker: 'Neon Drive', title: 'Rishabh Jalori' },
-  shatter: { kicker: 'Descent', title: 'The name breaks into light' },
-  ignition: { kicker: 'Ignition', title: 'Engine on' },
-  about: { kicker: 'About', title: 'The city talks' },
-  projects: { kicker: 'Projects', title: 'Project Towers' },
-  skills: { kicker: 'Skills', title: 'Dashboard HUD' },
-  regen: { kicker: 'Live demo', title: 'Regenerative braking' },
-  district: { kicker: 'All repos', title: 'Data District' },
-  rooftop: { kicker: 'Rooftop', title: 'Above the city' },
-  contact: { kicker: 'Transmit', title: 'Open a channel' },
-}
 
 function useScrollLength() {
   const mobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
   return mobile ? SCROLL_LENGTH_VH.mobile : SCROLL_LENGTH_VH.desktop
 }
 
+/**
+ * The scroll track: a tall, empty document whose scroll position drives
+ * everything. Anchors per beat make deep links / "skip to" work. The visible
+ * HTML lives in fixed layers below, in story order (screen-reader order too).
+ */
 export function Overlay() {
   const length = useScrollLength()
   const travel = length - 100 // scrollable distance in vh
-  const active = useExperience((s) => s.activeSection)
-
   return (
-    <main className="relative z-10" style={{ height: `${length}vh` }}>
-      {SECTIONS.map((s, i) => (
-        <section
-          key={s.id}
-          id={s.id}
-          aria-labelledby={`${s.id}-title`}
-          className="pointer-events-none absolute inset-x-0"
-          style={{ top: `${s.start * travel}vh`, height: `${(s.end - s.start) * travel + 100}vh` }}
-        >
-          <div className="sticky top-0 flex h-svh items-end px-4 pb-24 sm:px-10">
-            <div className={`beat ${active === s.id ? 'is-active' : ''}`}>
-              <p className="font-mono text-xs tracking-[0.3em] text-cyan uppercase">
-                {String(i + 1).padStart(2, '0')} · {PLACEHOLDER[s.id].kicker}
-              </p>
-              <h2
-                id={`${s.id}-title`}
-                className="font-display mt-2 text-4xl font-bold text-white uppercase sm:text-6xl"
-              >
-                {PLACEHOLDER[s.id].title}
-              </h2>
-            </div>
-          </div>
-        </section>
-      ))}
-    </main>
+    <>
+      <div className="relative" style={{ height: `${length}vh` }} aria-hidden="true">
+        {SECTIONS.map((s) => (
+          <span key={s.id} id={`at-${s.id}`} className="absolute left-0 h-px w-px" style={{ top: `${s.start * travel}vh` }} />
+        ))}
+      </div>
+      <main className="contents">
+        <HeroLayer />
+        <IgnitionLayer />
+        <AboutLayer />
+        <ProjectsLayer />
+        <ProjectCards />
+        <SkillsHud />
+        <RegenHud />
+        <DistrictLayer />
+        <RooftopLayer />
+        <ContactLayer />
+      </main>
+    </>
   )
 }
 

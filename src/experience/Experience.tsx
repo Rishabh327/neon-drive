@@ -6,7 +6,12 @@ import { City } from './objects/City'
 import { WetGround } from './objects/WetGround'
 import { Rain, RAIN_LAYER } from './objects/Rain'
 import { Car } from './objects/Car'
-import { BeatMarkers } from './scenes/BeatMarkers'
+import { PathLine } from './scenes/BeatMarkers'
+import { Hero } from './scenes/Hero'
+import { Billboards } from './scenes/Billboards'
+import { ProjectTowers } from './scenes/ProjectTowers'
+import { DataDistrict } from './scenes/DataDistrict'
+import { Rooftop } from './scenes/Rooftop'
 import { Effects } from './Effects'
 import { NeonEnvironment } from './NeonEnvironment'
 import { FLAGS } from '../debugFlags'
@@ -40,7 +45,8 @@ export default function Experience({ debug }: { debug: boolean }) {
       frameloop="never"
       dpr={dpr}
       gl={{ antialias: false, powerPreference: 'high-performance', alpha: false, stencil: false }}
-      camera={{ fov: 55, near: 0.3, far: 1400, position: [0, 175, 150] }}
+      // far: fog fully hides everything beyond 480 m, so don't pay for it
+      camera={{ fov: 55, near: 0.3, far: 700, position: [0, 175, 150] }}
       onCreated={(state) => {
         state.camera.layers.enable(RAIN_LAYER)
         useExperience.getState().markLoaded('scene')
@@ -54,6 +60,9 @@ export default function Experience({ debug }: { debug: boolean }) {
         })
         canvas.addEventListener('webglcontextrestored', () => console.warn('[neon-drive] WebGL context restored'))
       }}
+      // the HTML overlay sits on top, so listen on the root and map client coords
+      eventSource={document.getElementById('root')!}
+      eventPrefix="client"
       aria-hidden="true"
     >
       <color attach="background" args={[BG]} />
@@ -68,7 +77,12 @@ export default function Experience({ debug }: { debug: boolean }) {
       <WetGround />
       {FLAGS.rain && <Rain />}
       <Car />
-      <BeatMarkers debug={debug} />
+      <Hero />
+      <Billboards />
+      <ProjectTowers />
+      <DataDistrict />
+      <Rooftop />
+      {debug && new URLSearchParams(location.search).has('path') && <PathLine />}
       <Effects />
       <Warmup />
       {debug && <FpsProbe />}

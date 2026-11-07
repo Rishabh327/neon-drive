@@ -7,6 +7,7 @@ import {
   InstancedBufferGeometry,
   PlaneGeometry,
   ShaderMaterial,
+  Vector2,
   Vector3,
 } from 'three'
 import { useExperience, type QualityTier } from '../../store'
@@ -61,10 +62,14 @@ export function Rain() {
         uFall: { value: 26 },
         uWind: { value: new Vector3(2.2, 0, 0.8) },
         uColor: { value: new Color(0.55, 0.68, 0.95) },
+        uPointer: { value: new Vector2(9, 9) },
+        uPointerForce: { value: 0 },
+        uAspect: { value: 1 },
       },
     })
     return { geometry, material }
   }, [drops])
+  const pointerSmoothed = useRef(new Vector2(9, 9))
 
   const splash = useMemo(() => {
     if (!splashes) return null
@@ -87,7 +92,7 @@ export function Rain() {
     return { geometry, material }
   }, [splashes])
 
-  useFrame(({ camera, clock }, delta) => {
+  useFrame(({ camera, clock, pointer, size }, delta) => {
     const { progress } = useExperience.getState()
     const t = clock.elapsedTime
     // camera velocity (m/s), smoothed and clamped so streaks never go silly
@@ -104,6 +109,11 @@ export function Rain() {
     u.uCamVel.value.copy(camVel.current)
     // rooftop: rain thins out as we climb above the city
     u.uDensity.value = 1 - Math.min(1, Math.max(0, (progress - 0.88) / 0.08)) * 0.65
+    // cursor parts the rain — only in the hero, fading out as the drive starts
+    pointerSmoothed.current.lerp(pointer, Math.min(1, delta * 10))
+    u.uPointer.value.copy(pointerSmoothed.current)
+    u.uPointerForce.value = 1 - Math.min(1, Math.max(0, (progress - 0.06) / 0.05))
+    u.uAspect.value = size.width / Math.max(1, size.height)
 
     if (splash) {
       const s = splash.material.uniforms

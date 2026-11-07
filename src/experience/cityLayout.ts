@@ -3,9 +3,17 @@
  * World layout (units ≈ metres) — see cameraPath.ts for the camera side.
  *   Highway along −Z at x = 0 (z +40 … −570), cross street along +X at z = −560.
  */
+import { TOWER_LAYOUT } from './scenes/projectsLayout'
 export const ROAD_HALF = 10
 export const STREET_Z = -560
 export const TOWER = { x: 240, z: -610, w: 30, d: 30, h: 150 }
+
+/** Plots kept free of buildings for set pieces: billboards (aboutLayout) and project towers. */
+const CLEAR_PLOTS = [
+  ...Array.from({ length: 6 }, (_, i) => ({ x: (i % 2 ? 1 : -1) * 16, z: -78 - i * 31, r: 11 })),
+  ...TOWER_LAYOUT.map((t) => ({ x: t.x, z: t.z, r: 6 })),
+  { x: 197, z: -584, r: 23 }, // contribution wall (districtLayout.ts)
+]
 
 export function mulberry32(seed: number) {
   return () => {
@@ -50,20 +58,54 @@ function generate() {
   const buildings: Building[] = []
   const cell = 16
   const CLEAR = ROAD_HALF + 4 // sidewalk
+  const FRONT = 13 // depth band owned by the frontage rows
+  const blocked = (x: number, z: number, w: number, d: number) =>
+    (Math.abs(x - TOWER.x) < TOWER.w / 2 + w / 2 + 4 && Math.abs(z - TOWER.z) < TOWER.d / 2 + d / 2 + 4) ||
+    CLEAR_PLOTS.some((c) => Math.abs(x - c.x) < c.r + w / 2 && Math.abs(z - c.z) < c.r + d / 2)
+  const heightAt = (z: number, base: number) => {
+    const downtown = z < -250 && z > -520 ? 1 : 0
+    return base + rand() * (26 + downtown * 70)
+  }
+
+  // 1) Street frontage: a continuous (gappy) wall of buildings lining both roads
+  for (const side of [-1, 1]) {
+    for (let z = 70; z > -575; ) {
+      const w = 7 + rand() * 6 // depth away from the road
+      const d = 8 + rand() * 9 // length along the road
+      const x = side * (CLEAR + w / 2 + rand() * 1.2)
+      const zc = z - d / 2
+      z -= d + 0.6 + rand() * 1.8
+      // left side caps the T-junction; right side must stop short of the cross street
+      if (zc - d / 2 < (side > 0 ? STREET_Z + CLEAR : -575)) break
+      if (rand() < 0.1 || blocked(x, zc, w, d)) continue
+      buildings.push({ x, z: zc, w, d, h: heightAt(zc, 12) })
+    }
+  }
+  for (const side of [-1, 1]) {
+    for (let x = CLEAR + FRONT + 2; x < 340; ) {
+      const d = 7 + rand() * 6
+      const w = 8 + rand() * 9
+      const z = STREET_Z + side * (CLEAR + d / 2 + rand() * 1.2)
+      const xc = x + w / 2
+      x += w + 0.6 + rand() * 1.8
+      if (rand() < 0.1 || blocked(xc, z, w, d)) continue
+      buildings.push({ x: xc, z, w, d, h: 12 + rand() * 40 })
+    }
+  }
+
+  // 2) The grid behind the frontage
   for (let gx = -300; gx <= 360; gx += cell) {
     for (let gz = 80; gz >= -780; gz -= cell) {
       const x = gx + (rand() - 0.5) * 4
       const z = gz + (rand() - 0.5) * 4
       const w = 7 + rand() * 7
       const d = 7 + rand() * 7
-      if (Math.abs(x) < CLEAR + w / 2 && z > -580) continue
-      if (Math.abs(z - STREET_Z) < CLEAR + d / 2 && x > -20) continue
-      if (Math.abs(x - TOWER.x) < 26 && Math.abs(z - TOWER.z) < 26) continue
+      if (Math.abs(x) < CLEAR + FRONT + w / 2 && z > -580 - FRONT) continue
+      if (Math.abs(z - STREET_Z) < CLEAR + FRONT + d / 2 && x > -20 - FRONT) continue
+      if (blocked(x, z, w, d)) continue
       if (rand() < 0.12) continue
-      const downtown = z < -250 && z > -520 ? 1 : 0
       const distFromRoad = Math.min(Math.abs(x), 200) / 200
-      const h = 10 + rand() * (28 + downtown * 75) + distFromRoad * 45 * rand()
-      buildings.push({ x, z, w, d, h })
+      buildings.push({ x, z, w, d, h: heightAt(z, 10) + distFromRoad * 45 * rand() })
     }
   }
   buildings.push(TOWER)

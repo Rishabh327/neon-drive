@@ -73,7 +73,9 @@ void main() {
   float along = dot(toP.xz, uCarDir.xz);
   float across = abs(dot(toP.xz, vec2(-uCarDir.z, uCarDir.x)));
   float cone = smoothstep(0.0, 4.0, along) * (1.0 - smoothstep(0.0, 1.2 + along * 0.38, across)) * (1.0 - smoothstep(10.0, 34.0, along));
-  col += vec3(0.75, 0.93, 1.0) * cone * uHeadOn * mix(0.32, 0.12, rough);
+  // seen from the driver's seat (eye ≈ 1.1 m) the pool would wash out the lower screen
+  float fromAbove = 0.2 + 0.8 * smoothstep(1.4, 3.2, cameraPosition.y);
+  col += vec3(0.75, 0.93, 1.0) * cone * uHeadOn * mix(0.32, 0.12, rough) * fromAbove;
   // tail-light glow behind the car
   float tail = smoothstep(0.0, -1.0, along + 2.4) * (1.0 - smoothstep(0.0, 5.0, -along - 2.4)) * (1.0 - smoothstep(0.0, 1.6, across));
   col += vec3(1.0, 0.16, 0.43) * tail * 0.5;

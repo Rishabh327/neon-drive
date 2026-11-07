@@ -15,6 +15,9 @@ import {
 import { useExperience } from '../../store'
 import { carRoadParam, roadAt, roadParamOf } from '../carPath'
 import { carState } from '../carState'
+import { brakeIntensity } from '../regenModel'
+import { Cockpit } from './Cockpit'
+import { RegenFX } from '../scenes/RegenFX'
 
 /**
  * "NEON-01" — an original single-seat EV wedge, built procedurally (no model
@@ -88,12 +91,15 @@ const trailFrag = /* glsl */ `
 `
 
 const _pos = new Vector3()
+const _local = new Vector3()
 
 export function Car() {
   const { body, cabin } = useCarGeometry()
   const root = useRef<Group>(null)
   const wheels = useRef<Object3D[]>([])
   const trails = useRef<Mesh[]>([])
+  const shell = useRef<Group>(null)
+  const cockpit = useRef<Group>(null)
   const state = useRef({ s: 25, speed: 0, wheelAngle: 0 })
 
   const mats = useMemo(() => {
@@ -102,6 +108,7 @@ export function Car() {
     return {
       head: new MeshBasicMaterial({ color: headColor.clone().multiplyScalar(0.05), toneMapped: false }),
       tail: new MeshBasicMaterial({ color: tailColor.clone().multiplyScalar(4), toneMapped: false }),
+      tailBase: tailColor.clone().multiplyScalar(4),
       rim: new MeshBasicMaterial({ color: new Color('#05d9e8').multiplyScalar(2.2), toneMapped: false }),
       headOn: headColor.multiplyScalar(6),
       headOff: new Color('#bff8ff').multiplyScalar(0.05),
@@ -144,8 +151,14 @@ export function Car() {
     const yaw = roadAt(s, _pos)
     g.position.copy(_pos)
     g.rotation.y = yaw
-    // hide the shell once the camera is inside the cabin (HUD takes over in Phase 3)
-    g.visible = camera.position.distanceTo(_pos) > 3.2
+    g.updateMatrixWorld()
+    // inside the cabin: hide the shell, show the cockpit (the windshield HUD is HTML)
+    _local.copy(camera.position)
+    g.worldToLocal(_local)
+    const inside = Math.abs(_local.x) < 1.1 && Math.abs(_local.z) < 2.6 && _local.y < 1.35 && _local.y > 0.2
+    if (shell.current) shell.current.visible = !inside
+    if (cockpit.current) cockpit.current.visible = inside
+    g.updateMatrixWorld()
 
     st.wheelAngle += ds / 0.36
     for (const w of wheels.current) if (w) w.rotation.x = st.wheelAngle
@@ -155,6 +168,10 @@ export function Car() {
     if (progress > 0.205) on = 1
     else if (progress > 0.18) on = Math.sin(progress * 2600) > 0.2 ? 1 : 0.1
     mats.head.color.copy(on > 0.5 ? mats.headOn : mats.headOff)
+    // brake lights flare during the regen stop
+    const brake = brakeIntensity(progress)
+    carState.braking = brake
+    mats.tail.color.copy(mats.tailBase).multiplyScalar(1 + brake * 2.2)
     // share with the road shader (headlight pool + tail glow)
     carState.position.copy(_pos)
     carState.direction.set(Math.sin(yaw), 0, Math.cos(yaw))
@@ -181,6 +198,7 @@ export function Car() {
   return (
     <group>
       <group ref={root}>
+        <group ref={shell}>
         <mesh geometry={body}>
           <meshPhysicalMaterial
             color="#3a4058"
@@ -244,7 +262,12 @@ export function Car() {
             <planeGeometry args={[0.09, 1]} />
           </mesh>
         ))}
+        </group>
 
+        <group ref={cockpit} visible={false}>
+          <Cockpit />
+        </group>
+        <RegenFX />
       </group>
     </group>
   )

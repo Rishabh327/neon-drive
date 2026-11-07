@@ -38,6 +38,9 @@ interface ExperienceState {
   loaded: Record<LoadStage, boolean>
   /** True once the visitor pressed IGNITION / enter silently. */
   started: boolean
+  /** Regen-braking demo toggle */
+  regenOn: boolean
+  setRegen: (on: boolean) => void
   setScroll: (progress: number, velocity: number) => void
   setAudio: (on: boolean) => void
   setQuality: (q: QualityTier) => void
@@ -54,6 +57,8 @@ export const useExperience = create<ExperienceState>()((set, get) => ({
   quality: initialQuality(),
   loaded: { scene: false, shaders: false, frames: false, fonts: false },
   started: false,
+  regenOn: true,
+  setRegen: (regenOn) => set({ regenOn }),
   setScroll: (progress, velocity) => {
     const id = sectionAt(progress).id
     if (id !== get().activeSection) set({ progress, velocity, activeSection: id })

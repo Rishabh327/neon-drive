@@ -11,14 +11,22 @@ import {
   UniformsUtils,
 } from 'three'
 import { CITY, STREET_Z } from '../cityLayout'
+import { useExperience } from '../../store'
 import buildingVert from '../shaders/building.vert'
 import buildingFrag from '../shaders/building.frag'
 import signVert from '../shaders/sign.vert'
 import signFrag from '../shaders/sign.frag'
 
-/** All buildings: 1 draw call. Windows + roofline neon are procedural in the shader. */
+const CHUNK = 120 // metres
+
+/**
+ * Buildings, split into ~120 m spatial chunks. Each chunk is one InstancedMesh
+ * positioned at its centre with a real bounding sphere, so three.js can
+ * frustum-cull whole chunks and sort them front-to-back (far fewer overdrawn
+ * pixels in both the main and the reflection pass). Windows + roofline neon
+ * are procedural in the shader.
+ */
 function Buildings() {
-  const ref = useRef<InstancedMesh>(null)
   const material = useMemo(
     () =>
       new ShaderMaterial({
@@ -29,23 +37,47 @@ function Buildings() {
       }),
     [],
   )
+  const chunks = useMemo(() => {
+    const map = new Map<string, typeof CITY.buildings>()
+    for (const b of CITY.buildings) {
+      const key = `${Math.floor(b.x / CHUNK)},${Math.floor(b.z / CHUNK)}`
+      if (!map.has(key)) map.set(key, [])
+      map.get(key)!.push(b)
+    }
+    return [...map.values()].map((list) => {
+      const cx = list.reduce((a, b) => a + b.x, 0) / list.length
+      const cz = list.reduce((a, b) => a + b.z, 0) / list.length
+      return { list, cx, cz }
+    })
+  }, [])
+  useFrame(({ clock }) => {
+    material.uniforms.uTime.value = clock.elapsedTime
+  })
+  return (
+    <group>
+      {chunks.map((c, i) => (
+        <BuildingChunk key={i} chunk={c} material={material} />
+      ))}
+    </group>
+  )
+}
+
+function BuildingChunk({ chunk, material }: { chunk: { list: typeof CITY.buildings; cx: number; cz: number }; material: ShaderMaterial }) {
+  const ref = useRef<InstancedMesh>(null)
   useLayoutEffect(() => {
     const mesh = ref.current!
     const o = new Object3D()
-    CITY.buildings.forEach((b, i) => {
-      o.position.set(b.x, b.h / 2, b.z)
+    chunk.list.forEach((b, i) => {
+      o.position.set(b.x - chunk.cx, b.h / 2, b.z - chunk.cz)
       o.scale.set(b.w, b.h, b.d)
       o.updateMatrix()
       mesh.setMatrixAt(i, o.matrix)
     })
     mesh.instanceMatrix.needsUpdate = true
     mesh.computeBoundingSphere()
-  }, [])
-  useFrame(({ clock }) => {
-    material.uniforms.uTime.value = clock.elapsedTime
-  })
+  }, [chunk])
   return (
-    <instancedMesh ref={ref} args={[undefined, material, CITY.buildings.length]} frustumCulled={false}>
+    <instancedMesh ref={ref} args={[undefined, material, chunk.list.length]} position={[chunk.cx, 0, chunk.cz]}>
       <boxGeometry />
     </instancedMesh>
   )
@@ -84,7 +116,7 @@ function Signs() {
     mesh.geometry.setAttribute('aSeed', new InstancedBufferAttribute(seeds, 1))
     mesh.instanceMatrix.needsUpdate = true
     mesh.computeBoundingSphere()
-  }, [])
+  }, [CITY.signs])
   useFrame(({ clock }) => {
     material.uniforms.uTime.value = clock.elapsedTime
   })
@@ -118,7 +150,7 @@ function StreetLights() {
       m.instanceMatrix.needsUpdate = true
       m.computeBoundingSphere()
     }
-  }, [])
+  }, [CITY.lights])
   const headColor = useMemo(() => new Color('#9ff6ff').multiplyScalar(3), [])
   return (
     <group>
@@ -157,10 +189,18 @@ function LaneMarkings() {
     mesh.computeBoundingSphere()
   }, [dashes])
   const color = useMemo(() => new Color('#05d9e8').multiplyScalar(1.8), [])
+  const mat = useRef<import('three').MeshBasicMaterial>(null)
+  // hidden while the name is still in the sky; they "form" as the shatter particles land (≈17–19%)
+  useFrame(() => {
+    const p = useExperience.getState().progress
+    const o = Math.min(1, Math.max(0, (p - 0.168) / 0.022))
+    if (mat.current) mat.current.opacity = o
+    if (ref.current) ref.current.visible = o > 0.001
+  })
   return (
     <instancedMesh ref={ref} args={[undefined, undefined, dashes.length]} frustumCulled={false}>
       <planeGeometry />
-      <meshBasicMaterial color={color} toneMapped={false} />
+      <meshBasicMaterial ref={mat} color={color} toneMapped={false} transparent />
     </instancedMesh>
   )
 }

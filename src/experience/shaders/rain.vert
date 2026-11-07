@@ -7,6 +7,9 @@ uniform vec3 uCamVel;
 uniform float uDensity;
 uniform float uFall;
 uniform vec3 uWind;
+uniform vec2 uPointer;      // NDC
+uniform float uPointerForce; // 0 outside the hero
+uniform float uAspect;
 
 varying float vAlpha;
 varying float vV;
@@ -19,6 +22,18 @@ void main() {
   // Infinite rain: wrap every drop into a box that travels with the camera
   vec3 rel = mod(p - uCam + 0.5 * uBox, uBox) - 0.5 * uBox;
   vec3 world = uCam + rel;
+
+  // Cursor parts the rain: push drops away from the pointer, in screen space
+  if (uPointerForce > 0.0) {
+    vec4 clip = projectionMatrix * viewMatrix * vec4(world, 1.0);
+    vec2 ndc = clip.xy / max(clip.w, 1e-3);
+    vec2 d = (ndc - uPointer) * vec2(uAspect, 1.0);
+    float f = uPointerForce * exp(-dot(d, d) / 0.035) * step(0.0, clip.w);
+    vec2 dir = d / max(length(d), 1e-4);
+    vec3 camRight = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]);
+    vec3 camUp = vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
+    world += (camRight * dir.x + camUp * dir.y) * f * clip.w * 0.16;
+  }
 
   // Streak follows the drop's velocity relative to the camera → slants when driving fast
   vec3 vel = vec3(0.0, -speed, 0.0) + uWind - uCamVel;

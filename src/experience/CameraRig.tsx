@@ -26,8 +26,10 @@ export function CameraRig() {
 
     // pointer parallax — a few % of a metre, scaled down when inside the car
     const k = 1 - Math.exp(-delta * 3)
-    parallax.current.x += (pointer.x * 0.6 - parallax.current.x) * k
-    parallax.current.y += (pointer.y * 0.35 - parallax.current.y) * k
+    // less sway when low (inside the car), full sway in the open
+    const sway = MathUtils.clamp((_pos.y - 1.2) / 3, 0.08, 1)
+    parallax.current.x += (pointer.x * 0.6 * sway - parallax.current.x) * k
+    parallax.current.y += (pointer.y * 0.35 * sway - parallax.current.y) * k
     _pos.x += parallax.current.x
     _pos.y += parallax.current.y
 

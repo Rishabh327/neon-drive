@@ -10,4 +10,6 @@ export const carState = {
   direction: new Vector3(0, 0, -1),
   headlights: { value: 0 },
   speed: 0,
+  /** 0 … 1 brake intensity (regen stop) */
+  braking: 0,
 }
