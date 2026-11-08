@@ -99,6 +99,18 @@ async function main() {
     contributions,
   }
 
+  // Only rewrite when something other than the timestamp changed, so the daily
+  // workflow doesn't commit (and redeploy) when nothing on GitHub moved.
+  try {
+    const prev = JSON.parse(await readFile(OUT, 'utf8'))
+    const strip = (d) => JSON.stringify({ ...d, fetchedAt: null })
+    if (strip(prev) === strip(data)) {
+      console.log('✓ github.json unchanged — nothing to write')
+      return
+    }
+  } catch {
+    /* no previous snapshot */
+  }
   await mkdir(dirname(OUT), { recursive: true })
   await writeFile(OUT, JSON.stringify(data, null, 2) + '\n')
   console.log(
