@@ -1,14 +1,48 @@
 {
-  "fetchedAt": "2026-11-08T05:55:14.021Z",
+  "fetchedAt": "2026-11-08T06:03:02.393Z",
   "user": {
     "login": "Rishabh327",
     "name": "Rishabh Jalori",
     "avatar": "https://avatars.githubusercontent.com/u/115366218?v=4",
     "url": "https://github.com/Rishabh327",
-    "publicRepos": 21,
+    "publicRepos": 22,
     "followers": 1
   },
   "repos": [
+    {
+      "name": "neon-drive",
+      "description": "My portfolio: a scroll-driven 3D drive through a rain-soaked neon city (three.js, React Three Fiber, custom GLSL), powered by live GitHub data.",
+      "url": "https://github.com/Rishabh327/neon-drive",
+      "homepage": "https://rishabh-jalori.vercel.app",
+      "language": "TypeScript",
+      "languages": [
+        {
+          "name": "TypeScript",
+          "share": 0.8285
+        },
+        {
+          "name": "GLSL",
+          "share": 0.0771
+        },
+        {
+          "name": "CSS",
+          "share": 0.0491
+        },
+        {
+          "name": "JavaScript",
+          "share": 0.0321
+        },
+        {
+          "name": "HTML",
+          "share": 0.0132
+        }
+      ],
+      "stars": 0,
+      "forks": 0,
+      "topics": [],
+      "pushedAt": "2026-11-08T06:01:02Z",
+      "createdAt": "2026-11-08T05:59:04Z"
+    },
     {
       "name": "ev-regen-twin",
       "description": "EV energy-recovery digital twin: regenerative vs friction braking SoC simulation (Streamlit)",
@@ -440,7 +474,7 @@
     }
   ],
   "contributions": {
-    "total": 72,
+    "total": 85,
     "days": [
       {
         "date": "2025-11-09",
@@ -1892,15 +1926,15 @@
       },
       {
         "date": "2026-11-06",
-        "level": 0
+        "level": 2
       },
       {
         "date": "2026-11-07",
-        "level": 0
+        "level": 2
       },
       {
         "date": "2026-11-08",
-        "level": 0
+        "level": 4
       }
     ]
   }
