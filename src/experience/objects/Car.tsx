@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import {
   AdditiveBlending,
@@ -16,6 +16,8 @@ import { useExperience } from '../../store'
 import { carRoadParam, roadAt, roadParamOf } from '../carPath'
 import { carState } from '../carState'
 import { carSignals } from '../../lib/carSignals'
+import { loadJesko, type JeskoParts } from './jesko'
+import { WHEELS } from '../scenes/RegenFX'
 import { brakeIntensity } from '../regenModel'
 import { Cockpit } from './Cockpit'
 import { RegenFX } from '../scenes/RegenFX'
@@ -94,8 +96,31 @@ const trailFrag = /* glsl */ `
 const _pos = new Vector3()
 const _local = new Vector3()
 
+/** Tail-light / trail anchors for whichever body is showing. */
+const PROC_TAIL = { y: 0.8, z: -2.42, x: 0.75 }
+const JESKO_TAIL = { y: 0.72, z: -2.02, x: 0.74 }
+
 export function Car() {
   const { body, cabin } = useCarGeometry()
+  const quality = useExperience((s) => s.quality)
+  const [jesko, setJesko] = useState<JeskoParts | null>(null)
+  useEffect(() => {
+    if (quality === 'low') return // low tier keeps the light procedural car
+    let alive = true
+    loadJesko()
+      .then((parts) => {
+        if (!alive) return
+        // re-anchor the regen particles to the real axles
+        parts.wheelCenters.forEach((c, i) => WHEELS[i]?.copy(c))
+        setJesko(parts)
+      })
+      .catch((e) => console.warn('[neon-drive] car model failed to load — keeping the procedural car', e))
+    return () => {
+      alive = false
+    }
+  }, [quality])
+  const showJesko = !!jesko && quality !== 'low'
+  const tail = showJesko ? JESKO_TAIL : PROC_TAIL
   const root = useRef<Group>(null)
   const wheels = useRef<Object3D[]>([])
   const trails = useRef<Mesh[]>([])
@@ -161,8 +186,10 @@ export function Car() {
     if (cockpit.current) cockpit.current.visible = inside
     g.updateMatrixWorld()
 
-    st.wheelAngle += ds / 0.36
+    const radius = showJesko ? jesko!.wheelRadius : 0.36
+    st.wheelAngle += ds / radius
     for (const w of wheels.current) if (w) w.rotation.x = st.wheelAngle
+    if (showJesko) for (const w of jesko!.wheels) w.rotation.x = st.wheelAngle
 
     // headlights flick on just after ignition (18%)
     let on = 0
@@ -174,6 +201,7 @@ export function Car() {
     carState.braking = brake
     carSignals.braking = brake
     mats.tail.color.copy(mats.tailBase).multiplyScalar(1 + brake * 2.2)
+    if (showJesko) jesko!.tail.color.copy(jesko!.tailBase).multiplyScalar(1 + brake * 2.2)
     // share with the road shader (headlight pool + tail glow)
     carState.position.copy(_pos)
     carState.direction.set(Math.sin(yaw), 0, Math.cos(yaw))
@@ -185,7 +213,7 @@ export function Car() {
     for (const t of trails.current) {
       if (!t) continue
       t.scale.y = Math.max(len, 0.001)
-      t.position.z = -2.4 - len / 2
+      t.position.z = tail.z - 0.02 - len / 2
     }
     mats.trail.uniforms.uOpacity.value = Math.min(1, st.speed / 25)
   })
@@ -201,6 +229,21 @@ export function Car() {
     <group>
       <group ref={root}>
         <group ref={shell}>
+        {showJesko && (
+          <>
+            <primitive object={jesko!.body} />
+            {jesko!.wheels.map((w, i) => (
+              <primitive key={i} object={w} />
+            ))}
+            {/* neon headlight blades tracing the Jesko's lamp sweep */}
+            {[1, -1].map((side) => (
+              <mesh key={`hl${side}`} position={[side * 0.69, 0.6, 1.87]} rotation-y={side * 0.42} material={mats.head}>
+                <boxGeometry args={[0.34, 0.022, 0.02]} />
+              </mesh>
+            ))}
+          </>
+        )}
+        <group visible={!showJesko}>
         <mesh geometry={body}>
           <meshPhysicalMaterial
             color="#3a4058"
@@ -246,6 +289,7 @@ export function Car() {
             </mesh>
           </group>
         ))}
+        </group>
 
         {/* violet underglow */}
         <mesh rotation-x={-Math.PI / 2} position-y={0.04} scale={[2.8, 5.6, 1]} material={mats.underglow}>
@@ -253,12 +297,12 @@ export function Car() {
         </mesh>
 
         {/* tail-light streaks (flat ribbons trailing behind) */}
-        {[0.75, -0.75].map((x, i) => (
+        {[tail.x, -tail.x].map((x, i) => (
           <mesh
-            key={x}
+            key={i}
             ref={(m) => void (trails.current[i] = m!)}
             rotation-x={-Math.PI / 2}
-            position={[x, 0.8, -2.5]}
+            position={[x, tail.y, tail.z - 0.1]}
             material={mats.trail}
           >
             <planeGeometry args={[0.09, 1]} />

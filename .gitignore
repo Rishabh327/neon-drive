@@ -7,3 +7,6 @@ dist
 .DS_Store
 .vercel
 *.tsbuildinfo
+
+# raw source assets (large); optimised outputs go to public/models
+assets-src/

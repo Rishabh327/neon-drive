@@ -155,6 +155,23 @@ export function ContactPanel({ className = '', replayable = false }: { className
             </button>
           )}
         </div>
+        {replayable && (
+          <p className="mt-4 font-mono text-[10px] leading-relaxed text-haze/75">
+            Car:{' '}
+            <a className="underline underline-offset-2 hover:text-cyan" href="https://sketchfab.com/3d-models/2024-koenigsegg-jesko-attack-7378-e4e966bcfdf14a8dbc6c837764cb026b" target="_blank" rel="noreferrer">
+              “2024 Koenigsegg Jesko Attack #7378”
+            </a>{' '}
+            by{' '}
+            <a className="underline underline-offset-2 hover:text-cyan" href="https://sketchfab.com/HYPRIMPS3D" target="_blank" rel="noreferrer">
+              HYPR:IMPS 3D
+            </a>
+            ,{' '}
+            <a className="underline underline-offset-2 hover:text-cyan" href="http://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">
+              CC BY 4.0
+            </a>{' '}
+            — restyled. Not affiliated with Koenigsegg.
+          </p>
+        )}
       </section>
   )
 }

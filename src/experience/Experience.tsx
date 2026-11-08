@@ -14,6 +14,7 @@ import { ProjectTowers } from './scenes/ProjectTowers'
 import { DataDistrict } from './scenes/DataDistrict'
 import { Rooftop } from './scenes/Rooftop'
 import { Effects, postRegistry } from './Effects'
+import { loadJesko } from './objects/jesko'
 import { NeonEnvironment } from './NeonEnvironment'
 import { FLAGS } from '../debugFlags'
 import { setRenderFrame } from '../lib/frameDriver'
@@ -153,6 +154,11 @@ function World({ debug }: { debug: boolean }) {
   const camera = useThree((s) => s.camera)
   const [stage, setStage] = useState(0)
   const [ready, setReady] = useState(false)
+
+  // start downloading the hypercar right away (≈3 MB); the loader's bar tracks it
+  useEffect(() => {
+    if (useExperience.getState().quality !== 'low') loadJesko().catch(() => undefined)
+  }, [])
 
   useEffect(() => {
     let alive = true

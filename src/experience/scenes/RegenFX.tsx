@@ -8,7 +8,8 @@ import { REGEN } from '../../data/profile'
 import basicVert from '../shaders/basic.vert'
 
 const COUNT = 900
-const WHEELS = [
+/** Wheel axle positions (car-local). Updated in place when the Jesko model loads. */
+export const WHEELS = [
   new Vector3(0.86, 0.36, 1.45),
   new Vector3(-0.86, 0.36, 1.45),
   new Vector3(0.86, 0.36, -1.45),
