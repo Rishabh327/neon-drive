@@ -10,3 +10,5 @@ dist
 
 # raw source assets (large); optimised outputs go to public/models
 assets-src/
+
+.vercel
