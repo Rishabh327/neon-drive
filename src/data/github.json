@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-11-24T13:45:35.862Z",
+  "fetchedAt": "2026-11-25T12:58:43.000Z",
   "user": {
     "login": "Rishabh327",
     "name": "Rishabh Jalori",
@@ -9,6 +9,28 @@
     "followers": 1
   },
   "repos": [
+    {
+      "name": "ev-regen-twin",
+      "description": "EV energy-recovery digital twin: regenerative vs friction braking SoC simulation (Streamlit)",
+      "url": "https://github.com/Rishabh327/ev-regen-twin",
+      "homepage": null,
+      "language": "Python",
+      "languages": [
+        {
+          "name": "Python",
+          "share": 0.7946
+        },
+        {
+          "name": "HTML",
+          "share": 0.2054
+        }
+      ],
+      "stars": 0,
+      "forks": 0,
+      "topics": [],
+      "pushedAt": "2026-11-24T20:59:04Z",
+      "createdAt": "2026-11-03T06:15:32Z"
+    },
     {
       "name": "neon-drive",
       "description": "My portfolio: a scroll-driven 3D drive through a rain-soaked neon city (three.js, React Three Fiber, custom GLSL), powered by live GitHub data.",
@@ -40,26 +62,8 @@
       "stars": 0,
       "forks": 0,
       "topics": [],
-      "pushedAt": "2026-11-23T12:47:36Z",
+      "pushedAt": "2026-11-24T13:45:36Z",
       "createdAt": "2026-11-08T05:59:04Z"
-    },
-    {
-      "name": "ev-regen-twin",
-      "description": "EV energy-recovery digital twin: regenerative vs friction braking SoC simulation (Streamlit)",
-      "url": "https://github.com/Rishabh327/ev-regen-twin",
-      "homepage": null,
-      "language": "Python",
-      "languages": [
-        {
-          "name": "Python",
-          "share": 1
-        }
-      ],
-      "stars": 0,
-      "forks": 0,
-      "topics": [],
-      "pushedAt": "2026-11-03T06:15:44Z",
-      "createdAt": "2026-11-03T06:15:32Z"
     },
     {
       "name": "hyperlocal-alert-network",
@@ -474,7 +478,7 @@
     }
   ],
   "contributions": {
-    "total": 84,
+    "total": 86,
     "days": [
       {
         "date": "2025-11-23",
@@ -1943,6 +1947,10 @@
       {
         "date": "2026-11-24",
         "level": 0
+      },
+      {
+        "date": "2026-11-25",
+        "level": 2
       }
     ]
   }
